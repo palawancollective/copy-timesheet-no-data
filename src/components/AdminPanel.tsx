@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,6 +102,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
       setEditingEntry(null);
       setEditForm({});
       toast({ title: "Time entry updated successfully!" });
+    },
+    onError: (error) => {
+      console.error('Error updating entry:', error);
+      toast({ 
+        title: "Error updating entry", 
+        description: "Please check your changes and try again.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -143,18 +152,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     });
   };
 
-  const saveEdit = () => {
+  const handleSubmitEdit = () => {
+    if (!editingEntry) return;
+
     const updates: any = {};
     
-    if (editForm.clock_in) updates.clock_in = new Date(editForm.clock_in).toISOString();
-    if (editForm.clock_out) updates.clock_out = new Date(editForm.clock_out).toISOString();
-    if (editForm.lunch_out) updates.lunch_out = new Date(editForm.lunch_out).toISOString();
-    if (editForm.lunch_in) updates.lunch_in = new Date(editForm.lunch_in).toISOString();
-    if (editForm.paid_amount) updates.paid_amount = parseFloat(editForm.paid_amount);
+    // Convert datetime-local values to proper ISO timestamps
+    if (editForm.clock_in) {
+      updates.clock_in = new Date(editForm.clock_in).toISOString();
+    } else {
+      updates.clock_in = null;
+    }
+    
+    if (editForm.clock_out) {
+      updates.clock_out = new Date(editForm.clock_out).toISOString();
+    } else {
+      updates.clock_out = null;
+    }
+    
+    if (editForm.lunch_out) {
+      updates.lunch_out = new Date(editForm.lunch_out).toISOString();
+    } else {
+      updates.lunch_out = null;
+    }
+    
+    if (editForm.lunch_in) {
+      updates.lunch_in = new Date(editForm.lunch_in).toISOString();
+    } else {
+      updates.lunch_in = null;
+    }
+    
+    if (editForm.paid_amount && !isNaN(parseFloat(editForm.paid_amount))) {
+      updates.paid_amount = parseFloat(editForm.paid_amount);
+    } else {
+      updates.paid_amount = null;
+    }
+    
     updates.is_paid = editForm.is_paid;
 
     updateEntryMutation.mutate({
-      id: editingEntry!,
+      id: editingEntry,
       updates
     });
   };
@@ -219,7 +256,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString('en-US', {
+      timeZone: 'Asia/Manila'
+    });
   };
 
   const formatDateTimeForInput = (dateString: string | null) => {
@@ -432,11 +471,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                         {isEditing ? (
                           <div className="flex space-x-2">
                             <Button
-                              onClick={saveEdit}
+                              onClick={handleSubmitEdit}
                               size="sm"
                               className="bg-green-600 hover:bg-green-700"
+                              disabled={updateEntryMutation.isPending}
                             >
                               <Save className="h-3 w-3" />
+                              {updateEntryMutation.isPending ? 'Saving...' : 'Submit'}
                             </Button>
                             <Button
                               onClick={cancelEdit}
