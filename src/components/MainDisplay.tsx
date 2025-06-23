@@ -11,6 +11,18 @@ export const MainDisplay = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const queryClient = useQueryClient();
 
+  // Get Manila timezone date and time
+  const getManilaDate = () => {
+    const now = new Date();
+    const manilaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+    return manilaTime.toISOString().split('T')[0];
+  };
+
+  const getManilaDateTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"})).toISOString();
+  };
+
   // Fetch employees
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
@@ -55,8 +67,8 @@ export const MainDisplay = () => {
   // Clock in/out mutations
   const clockInMutation = useMutation({
     mutationFn: async (employeeId: string) => {
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date().toISOString();
+      const today = getManilaDate();
+      const now = getManilaDateTime();
       
       // Check if there's already an entry for today
       const { data: existingEntry } = await supabase
@@ -95,8 +107,8 @@ export const MainDisplay = () => {
 
   const clockOutMutation = useMutation({
     mutationFn: async (employeeId: string) => {
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date().toISOString();
+      const today = getManilaDate();
+      const now = getManilaDateTime();
       
       const { error } = await supabase
         .from('time_entries')
@@ -114,8 +126,8 @@ export const MainDisplay = () => {
 
   const lunchOutMutation = useMutation({
     mutationFn: async (employeeId: string) => {
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date().toISOString();
+      const today = getManilaDate();
+      const now = getManilaDateTime();
       
       const { error } = await supabase
         .from('time_entries')
@@ -133,8 +145,8 @@ export const MainDisplay = () => {
 
   const lunchInMutation = useMutation({
     mutationFn: async (employeeId: string) => {
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date().toISOString();
+      const today = getManilaDate();
+      const now = getManilaDateTime();
       
       const { error } = await supabase
         .from('time_entries')

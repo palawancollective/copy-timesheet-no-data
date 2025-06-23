@@ -18,6 +18,18 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
   const [paidAmount, setPaidAmount] = useState('');
   const queryClient = useQueryClient();
 
+  // Get Manila timezone date
+  const getManilaDate = () => {
+    const now = new Date();
+    const manilaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+    return manilaTime.toISOString().split('T')[0];
+  };
+
+  const getManilaDateTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"})).toISOString();
+  };
+
   // Fetch employees
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
@@ -37,8 +49,8 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
       const employee = employees.find(emp => emp.id === employeeId);
       if (!employee) throw new Error('Employee not found');
       
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date().toISOString();
+      const today = getManilaDate();
+      const now = getManilaDateTime();
       
       // Check if there's an entry for today
       const { data: existingEntry } = await supabase
@@ -150,7 +162,7 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
                 Payment for: <span className="font-semibold">{selectedEmployee.name}</span>
               </p>
               <p className="text-sm text-gray-600">
-                Date: <span className="font-semibold">{new Date().toLocaleDateString()}</span>
+                Date: <span className="font-semibold">{new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Manila' })}</span>
               </p>
             </div>
           )}

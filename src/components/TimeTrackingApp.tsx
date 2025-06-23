@@ -14,7 +14,10 @@ export const TimeTrackingApp = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      // Get Manila time
+      const now = new Date();
+      const manilaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+      setCurrentTime(manilaTime);
     }, 1000);
 
     return () => clearInterval(timer);
@@ -38,7 +41,8 @@ export const TimeTrackingApp = () => {
       hour12: true,
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      timeZone: 'Asia/Manila'
     });
   };
 
@@ -47,7 +51,8 @@ export const TimeTrackingApp = () => {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Manila'
     });
   };
 
