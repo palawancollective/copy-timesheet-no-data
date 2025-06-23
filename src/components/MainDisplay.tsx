@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TodaysTimeEntries } from './TodaysTimeEntries';
+import { AllTimeEntries } from './AllTimeEntries';
 import { toast } from '@/hooks/use-toast';
 
 export const MainDisplay = () => {
@@ -25,24 +25,32 @@ export const MainDisplay = () => {
     }
   });
 
-  // Fetch today's time entries
-  const { data: todaysEntries = [] } = useQuery({
-    queryKey: ['todaysEntries'],
+  // Fetch all time entries for real-time display
+  const { data: allEntries = [] } = useQuery({
+    queryKey: ['allTimeEntries'],
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('time_entries')
         .select(`
           *,
           employees (name, hourly_rate)
         `)
-        .eq('entry_date', today)
+        .order('entry_date', { ascending: false })
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
     }
   });
+
+  // Auto-refresh data every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   // Clock in/out mutations
   const clockInMutation = useMutation({
@@ -80,7 +88,7 @@ export const MainDisplay = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       toast({ title: "Clocked in successfully!" });
     }
   });
@@ -99,7 +107,7 @@ export const MainDisplay = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       toast({ title: "Clocked out successfully!" });
     }
   });
@@ -118,7 +126,7 @@ export const MainDisplay = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       toast({ title: "Lunch out recorded!" });
     }
   });
@@ -137,7 +145,7 @@ export const MainDisplay = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       toast({ title: "Lunch in recorded!" });
     }
   });
@@ -145,7 +153,7 @@ export const MainDisplay = () => {
   const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Employee Selection */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Select Employee</h2>
@@ -156,7 +164,7 @@ export const MainDisplay = () => {
           <SelectContent>
             {employees.map((employee) => (
               <SelectItem key={employee.id} value={employee.id}>
-                {employee.name} - ₱{employee.hourly_rate}/hr
+                {employee.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -202,8 +210,8 @@ export const MainDisplay = () => {
         </div>
       )}
 
-      {/* Today's Time Entries */}
-      <TodaysTimeEntries entries={todaysEntries} />
+      {/* All Time Entries */}
+      <AllTimeEntries entries={allEntries} />
     </div>
   );
 };

@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, DollarSign } from 'lucide-react';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
+import { PaidModal } from './PaidModal';
 
 export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPasskeyModal, setShowPasskeyModal] = useState(false);
+  const [showPaidModal, setShowPaidModal] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -69,12 +71,21 @@ export const TimeTrackingApp = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowPasskeyModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-            >
-              Admin
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowPaidModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Paid
+              </button>
+              <button
+                onClick={() => setShowPasskeyModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Admin
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -88,11 +99,17 @@ export const TimeTrackingApp = () => {
         )}
       </main>
 
-      {/* Passkey Modal */}
+      {/* Modals */}
       {showPasskeyModal && (
         <PasskeyModal
           onSubmit={handleAdminAccess}
           onClose={() => setShowPasskeyModal(false)}
+        />
+      )}
+
+      {showPaidModal && (
+        <PaidModal
+          onClose={() => setShowPaidModal(false)}
         />
       )}
     </div>
