@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, LogOut, Plus, Edit } from 'lucide-react';
+import { Download, LogOut, Plus, Edit, Save, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface AdminPanelProps {
@@ -18,7 +18,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [newEmployeeRate, setNewEmployeeRate] = useState('');
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
   const queryClient = useQueryClient();
+
+  // Get Manila timezone helpers
+  const getManilaDateTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"})).toISOString();
+  };
 
   // Fetch employees
   const { data: employees = [] } = useQuery({
@@ -73,14 +80,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
       const { error } = await supabase
         .from('time_entries')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: getManilaDateTime() })
         .eq('id', id);
       
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
       setEditingEntry(null);
+      setEditForm({});
       toast({ title: "Time entry updated successfully!" });
     }
   });
@@ -95,9 +104,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     });
   };
 
+  const startEditing = (entry: any) => {
+    setEditingEntry(entry.id);
+    setEditForm({
+      clock_in: entry.clock_in ? new Date(entry.clock_in).toISOString().slice(0, 16) : '',
+      clock_out: entry.clock_out ? new Date(entry.clock_out).toISOString().slice(0, 16) : '',
+      lunch_out: entry.lunch_out ? new Date(entry.lunch_out).toISOString().slice(0, 16) : '',
+      lunch_in: entry.lunch_in ? new Date(entry.lunch_in).toISOString().slice(0, 16) : '',
+      paid_amount: entry.paid_amount || '',
+      is_paid: entry.is_paid || false
+    });
+  };
+
+  const saveEdit = () => {
+    const updates: any = {};
+    
+    if (editForm.clock_in) updates.clock_in = new Date(editForm.clock_in).toISOString();
+    if (editForm.clock_out) updates.clock_out = new Date(editForm.clock_out).toISOString();
+    if (editForm.lunch_out) updates.lunch_out = new Date(editForm.lunch_out).toISOString();
+    if (editForm.lunch_in) updates.lunch_in = new Date(editForm.lunch_in).toISOString();
+    if (editForm.paid_amount) updates.paid_amount = parseFloat(editForm.paid_amount);
+    updates.is_paid = editForm.is_paid;
+
+    updateEntryMutation.mutate({
+      id: editingEntry!,
+      updates
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingEntry(null);
+    setEditForm({});
+  };
+
   const downloadTimesheet = () => {
     const csvContent = [
-      ['Employee', 'Date', 'Clock In', 'Clock Out', 'Lunch Out', 'Lunch In', 'Hours', 'Rate', 'Pay', 'Paid Status'].join(','),
+      ['Employee', 'Date', 'Clock In', 'Clock Out', 'Lunch Out', 'Lunch In', 'Hours', 'Rate', 'Pay', 'Paid Status', 'Paid Amount'].join(','),
       ...timeEntries.map(entry => {
         const workHours = calculateWorkHours(entry);
         const totalPay = workHours * entry.employees.hourly_rate;
@@ -112,7 +154,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
           workHours.toFixed(2),
           entry.employees.hourly_rate.toFixed(2),
           totalPay.toFixed(2),
-          entry.is_paid ? 'Paid' : 'Unpaid'
+          entry.is_paid ? 'Paid' : 'Unpaid',
+          entry.paid_amount ? entry.paid_amount.toFixed(2) : '0.00'
         ].join(',');
       })
     ].join('\n');
@@ -146,6 +189,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleString();
+  };
+
+  const formatDateTimeForInput = (dateString: string | null) => {
+    if (!dateString) return '';
+    return new Date(dateString).toISOString().slice(0, 16);
   };
 
   return (
@@ -250,14 +298,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                   <TableHead>Lunch Out</TableHead>
                   <TableHead>Lunch In</TableHead>
                   <TableHead>Hours</TableHead>
-                  <TableHead>Pay</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Paid Amount</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {timeEntries.slice(0, 20).map((entry) => {
                   const workHours = calculateWorkHours(entry);
-                  const totalPay = workHours * entry.employees.hourly_rate;
+                  const isEditing = editingEntry === entry.id;
                   
                   return (
                     <TableRow key={entry.id}>
@@ -265,20 +314,116 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                         {entry.employees.name}
                       </TableCell>
                       <TableCell>{entry.entry_date}</TableCell>
-                      <TableCell>{formatDateTime(entry.clock_in)}</TableCell>
-                      <TableCell>{formatDateTime(entry.clock_out)}</TableCell>
-                      <TableCell>{formatDateTime(entry.lunch_out)}</TableCell>
-                      <TableCell>{formatDateTime(entry.lunch_in)}</TableCell>
-                      <TableCell>{workHours.toFixed(2)}h</TableCell>
-                      <TableCell>₱{totalPay.toFixed(2)}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          entry.is_paid 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {entry.is_paid ? 'Paid' : 'Unpaid'}
-                        </span>
+                        {isEditing ? (
+                          <Input
+                            type="datetime-local"
+                            value={editForm.clock_in}
+                            onChange={(e) => setEditForm({...editForm, clock_in: e.target.value})}
+                            className="w-40"
+                          />
+                        ) : (
+                          formatDateTime(entry.clock_in)
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            type="datetime-local"
+                            value={editForm.clock_out}
+                            onChange={(e) => setEditForm({...editForm, clock_out: e.target.value})}
+                            className="w-40"
+                          />
+                        ) : (
+                          formatDateTime(entry.clock_out)
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            type="datetime-local"
+                            value={editForm.lunch_out}
+                            onChange={(e) => setEditForm({...editForm, lunch_out: e.target.value})}
+                            className="w-40"
+                          />
+                        ) : (
+                          formatDateTime(entry.lunch_out)
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            type="datetime-local"
+                            value={editForm.lunch_in}
+                            onChange={(e) => setEditForm({...editForm, lunch_in: e.target.value})}
+                            className="w-40"
+                          />
+                        ) : (
+                          formatDateTime(entry.lunch_in)
+                        )}
+                      </TableCell>
+                      <TableCell>{workHours.toFixed(2)}h</TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <select
+                            value={editForm.is_paid ? 'true' : 'false'}
+                            onChange={(e) => setEditForm({...editForm, is_paid: e.target.value === 'true'})}
+                            className="border rounded px-2 py-1"
+                          >
+                            <option value="false">Unpaid</option>
+                            <option value="true">Paid</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            entry.is_paid 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {entry.is_paid ? 'Paid' : 'Unpaid'}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={editForm.paid_amount}
+                            onChange={(e) => setEditForm({...editForm, paid_amount: e.target.value})}
+                            placeholder="0.00"
+                            className="w-24"
+                          />
+                        ) : (
+                          entry.paid_amount ? `₱${entry.paid_amount.toFixed(2)}` : '-'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={saveEdit}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              onClick={cancelEdit}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => startEditing(entry)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
