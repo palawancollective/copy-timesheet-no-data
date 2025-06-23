@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,8 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, LogOut, Plus, Edit, Save, X } from 'lucide-react';
+import { Download, LogOut, Plus, Edit, Save, X, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -94,6 +104,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     }
   });
 
+  // Delete time entry mutation
+  const deleteEntryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('time_entries')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      toast({ title: "Time entry deleted successfully!" });
+    }
+  });
+
   const handleAddEmployee = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmployeeName.trim() || !newEmployeeRate.trim()) return;
@@ -135,6 +162,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   const cancelEdit = () => {
     setEditingEntry(null);
     setEditForm({});
+  };
+
+  const handleDeleteEntry = (id: string) => {
+    deleteEntryMutation.mutate(id);
   };
 
   const downloadTimesheet = () => {
@@ -416,13 +447,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            onClick={() => startEditing(entry)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={() => startEditing(entry)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Time Entry</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this time entry for {entry.employees.name} on {entry.entry_date}? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteEntry(entry.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
