@@ -44,18 +44,23 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
 
   const formatTime = (timeString: string | null) => {
     if (!timeString) return '-';
-    return new Date(timeString).toLocaleTimeString('en-US', {
+    const date = new Date(timeString);
+    return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZone: 'Asia/Manila'
     });
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Parse the date string and format it properly for Manila timezone
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: 'Asia/Manila'
     });
   };
 
