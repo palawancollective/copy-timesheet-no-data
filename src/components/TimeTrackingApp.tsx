@@ -48,20 +48,56 @@ export const TimeTrackingApp = () => {
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
+      weekday: 'short',
+      month: 'short',
       day: 'numeric',
       timeZone: 'Asia/Manila'
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header with Real-time Clock */}
-      <header className="bg-white shadow-lg border-b-4 border-blue-500">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Fixed Header */}
+      <header className="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-blue-500">
+        <div className="w-full px-4 py-3">
+          {/* Mobile Layout */}
+          <div className="flex flex-col space-y-3 md:hidden">
+            {/* Top Row - Logo and Time */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-6 w-6 text-blue-600" />
+                <h1 className="text-lg font-bold text-gray-800">Time Tracker</h1>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-mono font-bold text-blue-600">
+                  {formatTime(currentTime)}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {formatDate(currentTime)}
+                </div>
+              </div>
+            </div>
+            
+            {/* Bottom Row - Buttons */}
+            <div className="flex space-x-2 w-full">
+              <button
+                onClick={() => setShowPaidModal(true)}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm"
+              >
+                <DollarSign className="h-4 w-4 mr-1" />
+                Paid
+              </button>
+              <button
+                onClick={() => setShowPasskeyModal(true)}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors text-sm"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <Clock className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-800">Time Tracker</h1>
@@ -96,12 +132,14 @@ export const TimeTrackingApp = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {isAdminMode ? (
-          <AdminPanel onLogout={handleAdminLogout} />
-        ) : (
-          <MainDisplay />
-        )}
+      <main className="w-full px-4 py-4 md:py-8 overflow-x-hidden">
+        <div className="max-w-full">
+          {isAdminMode ? (
+            <AdminPanel onLogout={handleAdminLogout} />
+          ) : (
+            <MainDisplay />
+          )}
+        </div>
       </main>
 
       {/* Modals */}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -165,10 +164,10 @@ export const MainDisplay = () => {
   const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="w-full max-w-full space-y-4 md:space-y-6 overflow-x-hidden">
       {/* Employee Selection */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Select Employee</h2>
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6 w-full">
+        <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-4">Select Employee</h2>
         <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Choose an employee" />
@@ -185,35 +184,35 @@ export const MainDisplay = () => {
 
       {/* Time Action Buttons */}
       {selectedEmployeeId && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6 w-full">
+          <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-4">
             Time Actions for {selectedEmployee?.name}
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 w-full">
             <Button
               onClick={() => clockInMutation.mutate(selectedEmployeeId)}
-              className="bg-green-600 hover:bg-green-700 text-white py-3"
+              className="bg-green-600 hover:bg-green-700 text-white py-3 text-sm md:text-base w-full"
               disabled={clockInMutation.isPending}
             >
               Clock In
             </Button>
             <Button
               onClick={() => clockOutMutation.mutate(selectedEmployeeId)}
-              className="bg-red-600 hover:bg-red-700 text-white py-3"
+              className="bg-red-600 hover:bg-red-700 text-white py-3 text-sm md:text-base w-full"
               disabled={clockOutMutation.isPending}
             >
               Clock Out
             </Button>
             <Button
               onClick={() => lunchOutMutation.mutate(selectedEmployeeId)}
-              className="bg-orange-600 hover:bg-orange-700 text-white py-3"
+              className="bg-orange-600 hover:bg-orange-700 text-white py-3 text-sm md:text-base w-full"
               disabled={lunchOutMutation.isPending}
             >
               Lunch Out
             </Button>
             <Button
               onClick={() => lunchInMutation.mutate(selectedEmployeeId)}
-              className="bg-blue-600 hover:bg-blue-700 text-white py-3"
+              className="bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm md:text-base w-full"
               disabled={lunchInMutation.isPending}
             >
               Lunch In
@@ -223,7 +222,9 @@ export const MainDisplay = () => {
       )}
 
       {/* All Time Entries */}
-      <AllTimeEntries entries={allEntries} />
+      <div className="w-full overflow-x-hidden">
+        <AllTimeEntries entries={allEntries} />
+      </div>
     </div>
   );
 };
