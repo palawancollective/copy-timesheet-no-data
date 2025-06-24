@@ -1,16 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, DollarSign } from 'lucide-react';
+import { Clock, DollarSign, FileText } from 'lucide-react';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
 import { PaidModal } from './PaidModal';
+import { InvoiceGenerator } from './InvoiceGenerator';
 
 export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPasskeyModal, setShowPasskeyModal] = useState(false);
   const [showPaidModal, setShowPaidModal] = useState(false);
   const [showPaidPasskeyModal, setShowPaidPasskeyModal] = useState(false);
+  const [showInvoiceMode, setShowInvoiceMode] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export const TimeTrackingApp = () => {
   const handleAdminAccess = (passkey: string) => {
     if (passkey === '4467') {
       setIsAdminMode(true);
+      setShowInvoiceMode(false);
       setShowPasskeyModal(false);
     } else {
       alert('Invalid passkey!');
@@ -48,6 +51,11 @@ export const TimeTrackingApp = () => {
 
   const handlePaidButtonClick = () => {
     setShowPaidPasskeyModal(true);
+  };
+
+  const handleInvoiceButtonClick = () => {
+    setShowInvoiceMode(true);
+    setIsAdminMode(false);
   };
 
   const formatTime = (date: Date) => {
@@ -102,6 +110,13 @@ export const TimeTrackingApp = () => {
                 Paid
               </button>
               <button
+                onClick={handleInvoiceButtonClick}
+                className={`flex-1 ${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-3 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm`}
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Invoice
+              </button>
+              <button
                 onClick={() => setShowPasskeyModal(true)}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors text-sm"
               >
@@ -135,6 +150,13 @@ export const TimeTrackingApp = () => {
                 Paid
               </button>
               <button
+                onClick={handleInvoiceButtonClick}
+                className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Invoice
+              </button>
+              <button
                 onClick={() => setShowPasskeyModal(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
@@ -150,6 +172,8 @@ export const TimeTrackingApp = () => {
         <div className="max-w-full">
           {isAdminMode ? (
             <AdminPanel onLogout={handleAdminLogout} />
+          ) : showInvoiceMode ? (
+            <InvoiceGenerator />
           ) : (
             <MainDisplay />
           )}
