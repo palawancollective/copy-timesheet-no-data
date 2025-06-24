@@ -10,6 +10,7 @@ export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPasskeyModal, setShowPasskeyModal] = useState(false);
   const [showPaidModal, setShowPaidModal] = useState(false);
+  const [showPaidPasskeyModal, setShowPaidPasskeyModal] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -32,8 +33,21 @@ export const TimeTrackingApp = () => {
     }
   };
 
+  const handlePaidAccess = (passkey: string) => {
+    if (passkey === '4467') {
+      setShowPaidPasskeyModal(false);
+      setShowPaidModal(true);
+    } else {
+      alert('Invalid passkey!');
+    }
+  };
+
   const handleAdminLogout = () => {
     setIsAdminMode(false);
+  };
+
+  const handlePaidButtonClick = () => {
+    setShowPaidPasskeyModal(true);
   };
 
   const formatTime = (date: Date) => {
@@ -81,7 +95,7 @@ export const TimeTrackingApp = () => {
             {/* Bottom Row - Buttons */}
             <div className="flex space-x-2 w-full">
               <button
-                onClick={() => setShowPaidModal(true)}
+                onClick={handlePaidButtonClick}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm"
               >
                 <DollarSign className="h-4 w-4 mr-1" />
@@ -114,7 +128,7 @@ export const TimeTrackingApp = () => {
 
             <div className="flex space-x-3">
               <button
-                onClick={() => setShowPaidModal(true)}
+                onClick={handlePaidButtonClick}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
               >
                 <DollarSign className="h-4 w-4 mr-2" />
@@ -147,6 +161,13 @@ export const TimeTrackingApp = () => {
         <PasskeyModal
           onSubmit={handleAdminAccess}
           onClose={() => setShowPasskeyModal(false)}
+        />
+      )}
+
+      {showPaidPasskeyModal && (
+        <PasskeyModal
+          onSubmit={handlePaidAccess}
+          onClose={() => setShowPaidPasskeyModal(false)}
         />
       )}
 

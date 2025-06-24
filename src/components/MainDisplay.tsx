@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,16 +52,39 @@ export const MainDisplay = () => {
       
       if (error) throw error;
       return data;
-    }
+    },
+    refetchInterval: 5000 // Refresh every 5 seconds for real-time updates
   });
 
-  // Auto-refresh data every 10 seconds
+  // Auto-refresh data every 5 seconds for more frequent updates
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(interval);
+  }, [queryClient]);
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('main-display-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'time_entries'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [queryClient]);
 
   // Clock in/out mutations
