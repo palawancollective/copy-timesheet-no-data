@@ -119,129 +119,174 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onEdit 
       </div>
 
       {/* Invoice Preview */}
-      <Card className="w-full print:shadow-none print:border-none">
-        <CardContent className="p-6 md:p-8" ref={invoiceRef}>
-          {/* Header */}
+      <Card className="w-full print:shadow-none print:border-none bg-white">
+        <CardContent className="p-8" ref={invoiceRef}>
+          {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-            <div className="flex items-center gap-4">
+            {/* Company Info */}
+            <div className="flex items-start gap-4 mb-4 md:mb-0">
               {companyLogo && (
                 <img 
                   src={companyLogo} 
                   alt="Company Logo" 
-                  className="w-16 h-16 object-contain"
+                  className="w-20 h-20 object-contain"
                 />
               )}
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">INVOICE</h1>
-                <p className="text-lg text-gray-600">#{invoice.invoiceNumber}</p>
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold text-slate-700">{invoice.company?.name || 'Company Name'}</h2>
+                <div className="text-sm text-slate-600 space-y-0.5">
+                  {invoice.company?.address && <p>[{invoice.company.address}]</p>}
+                  {(invoice.company?.municipality || invoice.company?.province || invoice.company?.zipCode) && (
+                    <p>[{invoice.company?.municipality}, {invoice.company?.province} {invoice.company?.zipCode}]</p>
+                  )}
+                  {invoice.company?.phoneNumber && <p>Phone: [{invoice.company.phoneNumber}]</p>}
+                  {invoice.company?.tin && <p>TIN: [{invoice.company.tin}]</p>}
+                </div>
               </div>
             </div>
-            <div className="text-right mt-4 md:mt-0">
-              <p className="text-sm text-gray-600">Date</p>
-              <p className="text-lg font-semibold">{formatDate(invoice.issueDate)}</p>
-              <p className="text-sm text-gray-600 mt-2">Currency</p>
-              <p className="text-lg font-semibold">Philippine Peso (₱)</p>
+
+            {/* Invoice Header */}
+            <div className="text-right">
+              <h1 className="text-4xl font-bold text-blue-600 mb-4">INVOICE</h1>
+              <div className="bg-slate-50 p-4 rounded border space-y-2">
+                <div className="flex justify-between gap-8">
+                  <span className="text-sm font-medium">DATE</span>
+                  <span className="text-sm border-b border-dashed">{formatDate(invoice.issueDate)}</span>
+                </div>
+                <div className="flex justify-between gap-8">
+                  <span className="text-sm font-medium">INVOICE #</span>
+                  <span className="text-sm border-b border-dashed">[{invoice.invoiceNumber}]</span>
+                </div>
+                <div className="flex justify-between gap-8">
+                  <span className="text-sm font-medium">CUSTOMER ID</span>
+                  <span className="text-sm border-b border-dashed">[{invoice.client?.id || '123'}]</span>
+                </div>
+                {invoice.dueDate && (
+                  <div className="flex justify-between gap-8">
+                    <span className="text-sm font-medium">DUE DATE</span>
+                    <span className="text-sm border-b border-dashed">{formatDate(invoice.dueDate)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* From/To Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">FROM</h3>
-              <div className="text-gray-800 space-y-1">
-                <p className="font-semibold">{invoice.company?.name || 'Your Company'}</p>
-                {invoice.company?.tin && <p>TIN: {invoice.company.tin}</p>}
-                {invoice.company?.address && <p>{invoice.company.address}</p>}
-                {invoice.company?.barangay && <p>Brgy. {invoice.company.barangay}</p>}
-                {invoice.company?.municipality && <p>{invoice.company.municipality}</p>}
-                {invoice.company?.province && <p>{invoice.company.province}</p>}
-                {invoice.company?.zipCode && <p>{invoice.company.zipCode}</p>}
-                {invoice.company?.phoneNumber && <p>{invoice.company.phoneNumber}</p>}
-                <p>{invoice.company?.isVat ? 'VAT 12%' : 'Non-VAT'}</p>
-              </div>
+          {/* Bill To Section */}
+          <div className="mb-6">
+            <div className="bg-blue-600 text-white px-4 py-2 font-bold">
+              BILL TO
             </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">TO</h3>
-              <div className="text-gray-800 space-y-1">
-                <p className="font-semibold">{invoice.client?.name || invoice.clientName || 'Client Name'}</p>
-                {(invoice.client?.email || invoice.clientEmail) && <p>{invoice.client?.email || invoice.clientEmail}</p>}
-                {invoice.client?.tin && <p>TIN: {invoice.client.tin}</p>}
-                {invoice.client?.address && <p>{invoice.client.address}</p>}
-                {invoice.client?.barangay && <p>Brgy. {invoice.client.barangay}</p>}
-                {invoice.client?.municipality && <p>{invoice.client.municipality}</p>}
-                {invoice.client?.province && <p>{invoice.client.province}</p>}
-                {invoice.client?.zipCode && <p>{invoice.client.zipCode}</p>}
-                {invoice.client?.phoneNumber && <p>{invoice.client.phoneNumber}</p>}
-                <p>{invoice.client?.isVat ? 'VAT 12%' : 'Non-VAT'}</p>
+            <div className="border border-t-0 p-4 bg-slate-50">
+              <div className="space-y-1 text-sm">
+                <p className="font-semibold">[{invoice.client?.name || invoice.clientName || 'Name'}]</p>
+                <p>[{invoice.client?.name || invoice.clientName || 'Company Name'}]</p>
+                {invoice.client?.address && <p>[{invoice.client.address}]</p>}
+                {(invoice.client?.municipality || invoice.client?.province || invoice.client?.zipCode) && (
+                  <p>[{invoice.client?.municipality}, {invoice.client?.province} {invoice.client?.zipCode}]</p>
+                )}
+                {invoice.client?.phoneNumber && <p>[{invoice.client.phoneNumber}]</p>}
+                {invoice.client?.tin && <p>TIN: [{invoice.client.tin}]</p>}
               </div>
             </div>
           </div>
 
           {/* Items Table */}
-          <div className="mb-8">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-3 px-2 font-semibold text-gray-600">Description</th>
-                    <th className="text-center py-3 px-2 font-semibold text-gray-600">Qty</th>
-                    <th className="text-right py-3 px-2 font-semibold text-gray-600">Unit Price</th>
-                    <th className="text-right py-3 px-2 font-semibold text-gray-600">VAT</th>
-                    <th className="text-right py-3 px-2 font-semibold text-gray-600">Amount</th>
+          <div className="mb-6">
+            <table className="w-full border-collapse border">
+              <thead>
+                <tr className="bg-blue-600 text-white">
+                  <th className="border border-white text-left px-3 py-2 font-bold">DESCRIPTION</th>
+                  <th className="border border-white text-center px-3 py-2 font-bold w-20">TAXED</th>
+                  <th className="border border-white text-right px-3 py-2 font-bold w-24">AMOUNT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items?.map((item: any, index: number) => (
+                  <tr key={item.id || index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="border px-3 py-2">
+                      <div>
+                        <div className="font-medium">[{item.description}]</div>
+                        <div className="text-sm text-slate-600">[{item.quantity} x ₱{item.rate?.toFixed(2) || '0.00'}]</div>
+                      </div>
+                    </td>
+                    <td className="border px-3 py-2 text-center">
+                      {item.isVat ? 'X' : ''}
+                    </td>
+                    <td className="border px-3 py-2 text-right font-semibold">
+                      ₱{item.amount?.toFixed(2) || '0.00'}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {invoice.items?.map((item: any, index: number) => (
-                    <tr key={item.id || index} className="border-b border-gray-100">
-                      <td className="py-3 px-2 text-gray-800">{item.description}</td>
-                      <td className="py-3 px-2 text-center text-gray-800">{item.quantity}</td>
-                      <td className="py-3 px-2 text-right text-gray-800">₱{item.rate?.toFixed(2) || '0.00'}</td>
-                      <td className="py-3 px-2 text-right text-gray-600">{item.isVat ? 'VAT 12%' : 'No VAT'}</td>
-                      <td className="py-3 px-2 text-right font-semibold text-gray-800">₱{item.amount?.toFixed(2) || '0.00'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+                {/* Empty rows for spacing */}
+                {Array.from({ length: Math.max(0, 8 - (invoice.items?.length || 0)) }).map((_, index) => (
+                  <tr key={`empty-${index}`} className={(invoice.items?.length + index) % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="border px-3 py-4">&nbsp;</td>
+                    <td className="border px-3 py-4">&nbsp;</td>
+                    <td className="border px-3 py-4">&nbsp;</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          {/* Totals */}
-          <div className="flex justify-end mb-8">
-            <div className="w-full md:w-1/2 lg:w-1/3">
-              <div className="space-y-2">
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-semibold">₱{calculateSubtotal()?.toFixed(2)}</span>
+          {/* Bottom Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Comments Section */}
+            <div>
+              <div className="bg-blue-600 text-white px-4 py-2 font-bold">
+                OTHER COMMENTS
+              </div>
+              <div className="border border-t-0 p-4 bg-slate-50 h-32">
+                <div className="space-y-1 text-sm">
+                  <p>1. Total payment due in 30 days</p>
+                  <p>2. Please include the invoice number on your check</p>
+                  {invoice.notes && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="whitespace-pre-wrap">{invoice.notes}</p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-600">VAT (12%):</span>
+              </div>
+            </div>
+
+            {/* Totals Section */}
+            <div>
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b">
+                  <span className="font-medium">Subtotal</span>
+                  <span className="font-semibold">₱{calculateSubtotal().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="font-medium">Taxable</span>
                   <span className="font-semibold">₱{calculateVat().toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-3 border-t-2 border-gray-200">
-                  <span className="text-lg font-bold text-gray-800">Total:</span>
-                  <span className="text-lg font-bold text-blue-600">₱{calculateTotal().toFixed(2)}</span>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="font-medium">Tax rate</span>
+                  <span className="font-semibold">12%</span>
                 </div>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="font-medium">Tax due</span>
+                  <span className="font-semibold">₱{(calculateVat() * 0.12).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="font-medium">Other</span>
+                  <span className="font-semibold">₱0.00</span>
+                </div>
+                <div className="flex justify-between py-3 text-lg font-bold bg-slate-100 px-3 rounded">
+                  <span>TOTAL</span>
+                  <span>₱{calculateTotal().toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-center text-sm">
+                <p className="font-medium">Make all checks payable to</p>
+                <p className="font-bold">[{invoice.company?.name || 'Your Company Name'}]</p>
               </div>
             </div>
           </div>
 
-          {/* Due Date */}
-          {invoice.dueDate && (
-            <div className="mb-8">
-              <p className="text-sm text-gray-600">Due Date: <span className="font-semibold">{formatDate(invoice.dueDate)}</span></p>
-            </div>
-          )}
-
-          {/* Notes */}
-          {invoice.notes && (
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Notes</h3>
-              <p className="text-gray-800 whitespace-pre-wrap">{invoice.notes}</p>
-            </div>
-          )}
-
           {/* Footer */}
-          <div className="text-center text-xs text-gray-500 border-t border-gray-200 pt-4">
+          <div className="text-center text-xs text-gray-500 border-t border-gray-200 pt-4 mt-8">
             <p>© Copyright Time Tracker 2025</p>
           </div>
         </CardContent>

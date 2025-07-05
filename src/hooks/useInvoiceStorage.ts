@@ -133,110 +133,163 @@ export const useInvoiceStorage = () => {
     const companyLogo = localStorage.getItem('company_logo');
 
     return `
-      <div style="padding: 40px; font-family: Arial, sans-serif; background: white;">
+      <div style="padding: 40px; font-family: Arial, sans-serif; background: white; color: black;">
+        <!-- Header Section -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            ${companyLogo ? `<img src="${companyLogo}" alt="Company Logo" style="width: 64px; height: 64px; object-fit: contain;" />` : ''}
+          <!-- Company Info -->
+          <div style="display: flex; align-items: flex-start; gap: 16px;">
+            ${companyLogo ? `<img src="${companyLogo}" alt="Company Logo" style="width: 80px; height: 80px; object-fit: contain;" />` : ''}
             <div>
-              <h1 style="font-size: 36px; margin: 0; color: #333;">INVOICE</h1>
-              <p style="font-size: 18px; color: #666; margin: 8px 0;">#${invoice.invoiceNumber}</p>
+              <h2 style="font-size: 20px; font-weight: bold; color: #475569; margin: 0 0 8px 0;">${invoice.company?.name || 'Company Name'}</h2>
+              <div style="font-size: 12px; color: #64748b; line-height: 1.4;">
+                ${invoice.company?.address ? `<p style="margin: 2px 0;">[${invoice.company.address}]</p>` : ''}
+                ${(invoice.company?.municipality || invoice.company?.province || invoice.company?.zipCode) ? 
+                  `<p style="margin: 2px 0;">[${invoice.company?.municipality || ''}, ${invoice.company?.province || ''} ${invoice.company?.zipCode || ''}]</p>` : ''}
+                ${invoice.company?.phoneNumber ? `<p style="margin: 2px 0;">Phone: [${invoice.company.phoneNumber}]</p>` : ''}
+                ${invoice.company?.tin ? `<p style="margin: 2px 0;">TIN: [${invoice.company.tin}]</p>` : ''}
+              </div>
             </div>
           </div>
+
+          <!-- Invoice Header -->
           <div style="text-align: right;">
-            <p style="color: #666; margin: 0;">Date</p>
-            <p style="font-size: 18px; font-weight: bold; margin: 4px 0;">${formatDate(invoice.issueDate)}</p>
-            <p style="color: #666; margin: 16px 0 0 0;">Currency</p>
-            <p style="font-size: 18px; font-weight: bold; margin: 4px 0;">Philippine Peso (₱)</p>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 60px; margin-bottom: 40px;">
-          <div>
-            <h3 style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 8px;">FROM</h3>
-            <div>
-              <p style="font-weight: bold; margin: 4px 0;">${invoice.company?.name || 'Your Company'}</p>
-              ${invoice.company?.tin ? `<p style="margin: 4px 0;">TIN: ${invoice.company.tin}</p>` : ''}
-              ${invoice.company?.address ? `<p style="margin: 4px 0;">${invoice.company.address}</p>` : ''}
-              ${invoice.company?.barangay ? `<p style="margin: 4px 0;">Brgy. ${invoice.company.barangay}</p>` : ''}
-              ${invoice.company?.municipality ? `<p style="margin: 4px 0;">${invoice.company.municipality}</p>` : ''}
-              ${invoice.company?.province ? `<p style="margin: 4px 0;">${invoice.company.province}</p>` : ''}
-              ${invoice.company?.zipCode ? `<p style="margin: 4px 0;">${invoice.company.zipCode}</p>` : ''}
-              ${invoice.company?.phoneNumber ? `<p style="margin: 4px 0;">${invoice.company.phoneNumber}</p>` : ''}
-              <p style="margin: 4px 0;">${invoice.company?.isVat ? 'VAT 12%' : 'Non-VAT'}</p>
-            </div>
-          </div>
-          <div>
-            <h3 style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 8px;">TO</h3>
-            <div>
-              <p style="font-weight: bold; margin: 4px 0;">${invoice.client?.name || invoice.clientName || 'Client Name'}</p>
-              ${(invoice.client?.email || invoice.clientEmail) ? `<p style="margin: 4px 0;">${invoice.client?.email || invoice.clientEmail}</p>` : ''}
-              ${invoice.client?.tin ? `<p style="margin: 4px 0;">TIN: ${invoice.client.tin}</p>` : ''}
-              ${invoice.client?.address ? `<p style="margin: 4px 0;">${invoice.client.address}</p>` : ''}
-              ${invoice.client?.barangay ? `<p style="margin: 4px 0;">Brgy. ${invoice.client.barangay}</p>` : ''}
-              ${invoice.client?.municipality ? `<p style="margin: 4px 0;">${invoice.client.municipality}</p>` : ''}
-              ${invoice.client?.province ? `<p style="margin: 4px 0;">${invoice.client.province}</p>` : ''}
-              ${invoice.client?.zipCode ? `<p style="margin: 4px 0;">${invoice.client.zipCode}</p>` : ''}
-              ${invoice.client?.phoneNumber ? `<p style="margin: 4px 0;">${invoice.client.phoneNumber}</p>` : ''}
-              <p style="margin: 4px 0;">${invoice.client?.isVat ? 'VAT 12%' : 'Non-VAT'}</p>
+            <h1 style="font-size: 48px; font-weight: bold; color: #2563eb; margin: 0 0 20px 0;">INVOICE</h1>
+            <div style="background: #f8fafc; padding: 16px; border: 1px solid #e2e8f0; border-radius: 4px;">
+              <div style="display: flex; justify-content: space-between; gap: 32px; margin-bottom: 8px;">
+                <span style="font-size: 12px; font-weight: 500;">DATE</span>
+                <span style="font-size: 12px; border-bottom: 1px dashed #64748b;">${formatDate(invoice.issueDate)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; gap: 32px; margin-bottom: 8px;">
+                <span style="font-size: 12px; font-weight: 500;">INVOICE #</span>
+                <span style="font-size: 12px; border-bottom: 1px dashed #64748b;">[${invoice.invoiceNumber}]</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; gap: 32px; margin-bottom: 8px;">
+                <span style="font-size: 12px; font-weight: 500;">CUSTOMER ID</span>
+                <span style="font-size: 12px; border-bottom: 1px dashed #64748b;">[${invoice.client?.id || '123'}]</span>
+              </div>
+              ${invoice.dueDate ? `
+                <div style="display: flex; justify-content: space-between; gap: 32px;">
+                  <span style="font-size: 12px; font-weight: 500;">DUE DATE</span>
+                  <span style="font-size: 12px; border-bottom: 1px dashed #64748b;">${formatDate(invoice.dueDate)}</span>
+                </div>
+              ` : ''}
             </div>
           </div>
         </div>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
-          <thead>
-            <tr style="border-bottom: 2px solid #ddd;">
-              <th style="text-align: left; padding: 12px 8px; color: #666;">Description</th>
-              <th style="text-align: center; padding: 12px 8px; color: #666;">Qty</th>
-              <th style="text-align: right; padding: 12px 8px; color: #666;">Unit Price</th>
-              <th style="text-align: right; padding: 12px 8px; color: #666;">VAT</th>
-              <th style="text-align: right; padding: 12px 8px; color: #666;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${invoice.items?.map((item: any) => `
-              <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 12px 8px;">${item.description}</td>
-                <td style="text-align: center; padding: 12px 8px;">${item.quantity}</td>
-                <td style="text-align: right; padding: 12px 8px;">₱${(item.rate || 0).toFixed(2)}</td>
-                <td style="text-align: right; padding: 12px 8px;">${item.isVat ? 'VAT 12%' : 'No VAT'}</td>
-                <td style="text-align: right; padding: 12px 8px; font-weight: bold;">₱${(item.amount || 0).toFixed(2)}</td>
+        <!-- Bill To Section -->
+        <div style="margin-bottom: 24px;">
+          <div style="background: #2563eb; color: white; padding: 8px 16px; font-weight: bold;">
+            BILL TO
+          </div>
+          <div style="border: 1px solid #2563eb; border-top: none; padding: 16px; background: #f8fafc;">
+            <div style="font-size: 12px; line-height: 1.4;">
+              <p style="font-weight: bold; margin: 2px 0;">[${invoice.client?.name || invoice.clientName || 'Name'}]</p>
+              <p style="margin: 2px 0;">[${invoice.client?.name || invoice.clientName || 'Company Name'}]</p>
+              ${invoice.client?.address ? `<p style="margin: 2px 0;">[${invoice.client.address}]</p>` : ''}
+              ${(invoice.client?.municipality || invoice.client?.province || invoice.client?.zipCode) ? 
+                `<p style="margin: 2px 0;">[${invoice.client?.municipality || ''}, ${invoice.client?.province || ''} ${invoice.client?.zipCode || ''}]</p>` : ''}
+              ${invoice.client?.phoneNumber ? `<p style="margin: 2px 0;">[${invoice.client.phoneNumber}]</p>` : ''}
+              ${invoice.client?.tin ? `<p style="margin: 2px 0;">TIN: [${invoice.client.tin}]</p>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div style="margin-bottom: 24px;">
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+            <thead>
+              <tr style="background: #2563eb; color: white;">
+                <th style="border: 1px solid white; text-align: left; padding: 8px 12px; font-weight: bold;">DESCRIPTION</th>
+                <th style="border: 1px solid white; text-align: center; padding: 8px 12px; font-weight: bold; width: 80px;">TAXED</th>
+                <th style="border: 1px solid white; text-align: right; padding: 8px 12px; font-weight: bold; width: 100px;">AMOUNT</th>
               </tr>
-            `).join('') || ''}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${invoice.items?.map((item: any, index: number) => `
+                <tr style="background: ${index % 2 === 0 ? 'white' : '#f8fafc'};">
+                  <td style="border: 1px solid #000; padding: 8px 12px;">
+                    <div style="font-weight: 500;">[${item.description}]</div>
+                    <div style="font-size: 11px; color: #64748b;">[${item.quantity} x ₱${(item.rate || 0).toFixed(2)}]</div>
+                  </td>
+                  <td style="border: 1px solid #000; padding: 8px 12px; text-align: center;">
+                    ${item.isVat ? 'X' : ''}
+                  </td>
+                  <td style="border: 1px solid #000; padding: 8px 12px; text-align: right; font-weight: bold;">
+                    ₱${(item.amount || 0).toFixed(2)}
+                  </td>
+                </tr>
+              `).join('') || ''}
+              ${Array.from({ length: Math.max(0, 8 - (invoice.items?.length || 0)) }).map((_, index) => `
+                <tr style="background: ${(invoice.items?.length + index) % 2 === 0 ? 'white' : '#f8fafc'};">
+                  <td style="border: 1px solid #000; padding: 16px 12px;">&nbsp;</td>
+                  <td style="border: 1px solid #000; padding: 16px 12px;">&nbsp;</td>
+                  <td style="border: 1px solid #000; padding: 16px 12px;">&nbsp;</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
-          <div style="width: 300px;">
-            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-              <span>Subtotal:</span>
-              <span style="font-weight: bold;">₱${calculateSubtotal().toFixed(2)}</span>
+        <!-- Bottom Section -->
+        <div style="display: flex; gap: 24px;">
+          <!-- Comments Section -->
+          <div style="flex: 1;">
+            <div style="background: #2563eb; color: white; padding: 8px 16px; font-weight: bold;">
+              OTHER COMMENTS
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-              <span>VAT (12%):</span>
-              <span style="font-weight: bold;">₱${calculateVat().toFixed(2)}</span>
+            <div style="border: 1px solid #2563eb; border-top: none; padding: 16px; background: #f8fafc; height: 120px;">
+              <div style="font-size: 12px; line-height: 1.4;">
+                <p style="margin: 2px 0;">1. Total payment due in 30 days</p>
+                <p style="margin: 2px 0;">2. Please include the invoice number on your check</p>
+                ${invoice.notes ? `
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #64748b;">
+                    <p style="white-space: pre-wrap; margin: 0;">${invoice.notes}</p>
+                  </div>
+                ` : ''}
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 2px solid #ddd;">
-              <span style="font-size: 18px; font-weight: bold;">Total:</span>
-              <span style="font-size: 18px; font-weight: bold; color: #3b82f6;">₱${calculateTotal().toFixed(2)}</span>
+          </div>
+
+          <!-- Totals Section -->
+          <div style="flex: 1; max-width: 300px;">
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500;">Subtotal</span>
+                <span style="font-weight: bold;">₱${calculateSubtotal().toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500;">Taxable</span>
+                <span style="font-weight: bold;">₱${calculateVat().toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500;">Tax rate</span>
+                <span style="font-weight: bold;">12%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500;">Tax due</span>
+                <span style="font-weight: bold;">₱${(calculateVat() * 0.12).toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500;">Other</span>
+                <span style="font-weight: bold;">₱0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 12px; font-size: 18px; font-weight: bold; background: #f1f5f9; border-radius: 4px;">
+                <span>TOTAL</span>
+                <span>₱${calculateTotal().toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div style="text-align: center; font-size: 12px; margin-top: 24px;">
+              <p style="font-weight: 500; margin: 2px 0;">Make all checks payable to</p>
+              <p style="font-weight: bold; margin: 2px 0;">[${invoice.company?.name || 'Your Company Name'}]</p>
             </div>
           </div>
         </div>
 
-        ${invoice.dueDate ? `
-          <div style="margin-bottom: 40px;">
-            <p style="color: #666;">Due Date: <span style="font-weight: bold;">${formatDate(invoice.dueDate)}</span></p>
-          </div>
-        ` : ''}
-
-        ${invoice.notes ? `
-          <div style="margin-bottom: 40px;">
-            <h3 style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Notes</h3>
-            <p style="white-space: pre-wrap;">${invoice.notes}</p>
-          </div>
-        ` : ''}
-
-        <div style="text-align: center; color: #999; font-size: 12px; border-top: 1px solid #ddd; padding-top: 16px;">
-          <p>© Copyright Time Tracker 2025</p>
+        <!-- Footer -->
+        <div style="text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 32px;">
+          <p style="margin: 0;">© Copyright Time Tracker 2025</p>
         </div>
       </div>
     `;
