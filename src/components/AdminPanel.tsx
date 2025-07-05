@@ -209,16 +209,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const csvContent = [
       ['Employee', 'Date', 'Clock In', 'Clock Out', 'Lunch Out', 'Lunch In', 'Hours', 'Rate', 'Pay', 'Paid Status', 'Paid Amount'].join(','),
       ...timeEntries.map(entry => {
-        const workHours = calculateWorkHours(entry);
+        const workHours = calculateWorkHoursForCSV(entry);
         const totalPay = workHours * entry.employees.hourly_rate;
         
         return [
-          entry.employees.name,
+          `"${entry.employees.name}"`,
           entry.entry_date,
-          entry.clock_in ? new Date(entry.clock_in).toLocaleString() : '',
-          entry.clock_out ? new Date(entry.clock_out).toLocaleString() : '',
-          entry.lunch_out ? new Date(entry.lunch_out).toLocaleString() : '',
-          entry.lunch_in ? new Date(entry.lunch_in).toLocaleString() : '',
+          entry.clock_in ? `"${new Date(entry.clock_in).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : '',
+          entry.clock_out ? `"${new Date(entry.clock_out).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : 'Still Working',
+          entry.lunch_out ? `"${new Date(entry.lunch_out).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : '',
+          entry.lunch_in ? `"${new Date(entry.lunch_in).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : '',
           workHours.toFixed(2),
           entry.employees.hourly_rate.toFixed(2),
           totalPay.toFixed(2),
@@ -228,7 +228,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
       })
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -253,6 +253,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     
     return Math.max(0, totalMinutes / 60);
   };
+
+  // Enhanced hours calculation for CSV that handles ongoing work
+  const calculateWorkHoursForCSV = (entry: any): number => {
+    if (!entry.clock_in) return 0;
+    
+    const clockIn = new Date(entry.clock_in);
+    const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+    let totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
+    
+    // Subtract lunch break if both lunch times are recorded
+    if (entry.lunch_out && entry.lunch_in) {
+      const lunchOut = new Date(entry.lunch_out);
+      const lunchIn = new Date(entry.lunch_in);
+      const lunchMinutes = (lunchIn.getTime() - lunchOut.getTime()) / (1000 * 60);
+      totalMinutes -= lunchMinutes;
+    } else if (entry.lunch_out && !entry.lunch_in && !entry.clock_out) {
+      // If currently on lunch, subtract ongoing lunch time
+      const lunchOut = new Date(entry.lunch_out);
+      const now = new Date();
+      const ongoingLunchMinutes = (now.getTime() - lunchOut.getTime()) / (1000 * 60);
+      totalMinutes -= ongoingLunchMinutes;
+    }
+    
+    return Math.max(0, totalMinutes / 60);
+  };
+
+  // Clock out employee mutation
+  const clockOutEmployeeMutation = useMutation({
+    mutationFn: async (entryId: string) => {
+      const now = getManilaDateTime();
+      const { error } = await supabase
+        .from('time_entries')
+        .update({ 
+          clock_out: now,
+          updated_at: now
+        })
+        .eq('id', entryId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      toast({ title: "Employee clocked out successfully!" });
+    }
+  });
 
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-';
@@ -489,6 +535,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                           </div>
                         ) : (
                           <div className="flex space-x-2">
+                            {entry.clock_in && !entry.clock_out && (
+                              <Button
+                                onClick={() => clockOutEmployeeMutation.mutate(entry.id)}
+                                size="sm"
+                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                disabled={clockOutEmployeeMutation.isPending}
+                              >
+                                <LogOut className="h-3 w-3" />
+                                Clock Out
+                              </Button>
+                            )}
                             <Button
                               onClick={() => startEditing(entry)}
                               size="sm"
