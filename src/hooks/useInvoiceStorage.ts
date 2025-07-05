@@ -118,15 +118,29 @@ export const useInvoiceStorage = () => {
     };
 
     const calculateSubtotal = () => {
-      return invoice.items?.reduce((sum: number, item: any) => sum + item.amount, 0) || 0;
+      return invoice.subtotal || invoice.items?.reduce((sum: number, item: any) => sum + item.amount, 0) || 0;
     };
+
+    const calculateVat = () => {
+      return invoice.vat || invoice.items?.filter((item: any) => item.isVat)
+        .reduce((sum: number, item: any) => sum + (item.amount * 0.12), 0) || 0;
+    };
+
+    const calculateTotal = () => {
+      return invoice.total || (calculateSubtotal() + calculateVat());
+    };
+
+    const companyLogo = localStorage.getItem('company_logo');
 
     return `
       <div style="padding: 40px; font-family: Arial, sans-serif; background: white;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
-          <div>
-            <h1 style="font-size: 36px; margin: 0; color: #333;">INVOICE</h1>
-            <p style="font-size: 18px; color: #666; margin: 8px 0;">#${invoice.invoiceNumber}</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            ${companyLogo ? `<img src="${companyLogo}" alt="Company Logo" style="width: 64px; height: 64px; object-fit: contain;" />` : ''}
+            <div>
+              <h1 style="font-size: 36px; margin: 0; color: #333;">INVOICE</h1>
+              <p style="font-size: 18px; color: #666; margin: 8px 0;">#${invoice.invoiceNumber}</p>
+            </div>
           </div>
           <div style="text-align: right;">
             <p style="color: #666; margin: 0;">Date</p>
@@ -140,18 +154,30 @@ export const useInvoiceStorage = () => {
           <div>
             <h3 style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 8px;">FROM</h3>
             <div>
-              <p style="font-weight: bold; margin: 4px 0;">Your Company</p>
-              <p style="margin: 4px 0;">Philippines</p>
-              <p style="margin: 4px 0;">Non-VAT</p>
+              <p style="font-weight: bold; margin: 4px 0;">${invoice.company?.name || 'Your Company'}</p>
+              ${invoice.company?.tin ? `<p style="margin: 4px 0;">TIN: ${invoice.company.tin}</p>` : ''}
+              ${invoice.company?.address ? `<p style="margin: 4px 0;">${invoice.company.address}</p>` : ''}
+              ${invoice.company?.barangay ? `<p style="margin: 4px 0;">Brgy. ${invoice.company.barangay}</p>` : ''}
+              ${invoice.company?.municipality ? `<p style="margin: 4px 0;">${invoice.company.municipality}</p>` : ''}
+              ${invoice.company?.province ? `<p style="margin: 4px 0;">${invoice.company.province}</p>` : ''}
+              ${invoice.company?.zipCode ? `<p style="margin: 4px 0;">${invoice.company.zipCode}</p>` : ''}
+              ${invoice.company?.phoneNumber ? `<p style="margin: 4px 0;">${invoice.company.phoneNumber}</p>` : ''}
+              <p style="margin: 4px 0;">${invoice.company?.isVat ? 'VAT 12%' : 'Non-VAT'}</p>
             </div>
           </div>
           <div>
             <h3 style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 8px;">TO</h3>
             <div>
-              <p style="font-weight: bold; margin: 4px 0;">${invoice.clientName}</p>
-              ${invoice.clientEmail ? `<p style="margin: 4px 0;">${invoice.clientEmail}</p>` : ''}
-              <p style="margin: 4px 0;">Philippines</p>
-              <p style="margin: 4px 0;">Non-VAT</p>
+              <p style="font-weight: bold; margin: 4px 0;">${invoice.client?.name || invoice.clientName || 'Client Name'}</p>
+              ${(invoice.client?.email || invoice.clientEmail) ? `<p style="margin: 4px 0;">${invoice.client?.email || invoice.clientEmail}</p>` : ''}
+              ${invoice.client?.tin ? `<p style="margin: 4px 0;">TIN: ${invoice.client.tin}</p>` : ''}
+              ${invoice.client?.address ? `<p style="margin: 4px 0;">${invoice.client.address}</p>` : ''}
+              ${invoice.client?.barangay ? `<p style="margin: 4px 0;">Brgy. ${invoice.client.barangay}</p>` : ''}
+              ${invoice.client?.municipality ? `<p style="margin: 4px 0;">${invoice.client.municipality}</p>` : ''}
+              ${invoice.client?.province ? `<p style="margin: 4px 0;">${invoice.client.province}</p>` : ''}
+              ${invoice.client?.zipCode ? `<p style="margin: 4px 0;">${invoice.client.zipCode}</p>` : ''}
+              ${invoice.client?.phoneNumber ? `<p style="margin: 4px 0;">${invoice.client.phoneNumber}</p>` : ''}
+              <p style="margin: 4px 0;">${invoice.client?.isVat ? 'VAT 12%' : 'Non-VAT'}</p>
             </div>
           </div>
         </div>
@@ -171,9 +197,9 @@ export const useInvoiceStorage = () => {
               <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 12px 8px;">${item.description}</td>
                 <td style="text-align: center; padding: 12px 8px;">${item.quantity}</td>
-                <td style="text-align: right; padding: 12px 8px;">₱${item.rate.toFixed(2)}</td>
-                <td style="text-align: right; padding: 12px 8px;">No VAT</td>
-                <td style="text-align: right; padding: 12px 8px; font-weight: bold;">₱${item.amount.toFixed(2)}</td>
+                <td style="text-align: right; padding: 12px 8px;">₱${(item.rate || 0).toFixed(2)}</td>
+                <td style="text-align: right; padding: 12px 8px;">${item.isVat ? 'VAT 12%' : 'No VAT'}</td>
+                <td style="text-align: right; padding: 12px 8px; font-weight: bold;">₱${(item.amount || 0).toFixed(2)}</td>
               </tr>
             `).join('') || ''}
           </tbody>
@@ -186,12 +212,12 @@ export const useInvoiceStorage = () => {
               <span style="font-weight: bold;">₱${calculateSubtotal().toFixed(2)}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-              <span>VAT (0%):</span>
-              <span style="font-weight: bold;">₱0.00</span>
+              <span>VAT (12%):</span>
+              <span style="font-weight: bold;">₱${calculateVat().toFixed(2)}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 2px solid #ddd;">
               <span style="font-size: 18px; font-weight: bold;">Total:</span>
-              <span style="font-size: 18px; font-weight: bold; color: #3b82f6;">₱${invoice.total?.toFixed(2) || '0.00'}</span>
+              <span style="font-size: 18px; font-weight: bold; color: #3b82f6;">₱${calculateTotal().toFixed(2)}</span>
             </div>
           </div>
         </div>
