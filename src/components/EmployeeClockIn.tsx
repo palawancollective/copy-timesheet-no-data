@@ -294,7 +294,45 @@ export const EmployeeClockIn: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            {/* Mobile View */}
+            <div className="block md:hidden">
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {todaysTasks.map((task, index) => (
+                  <div key={task.id} className={`bg-gray-50 rounded-lg p-3 border ${task.is_completed ? 'bg-green-50' : ''}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 pr-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleToggleTask(task.id, task.is_completed)}
+                            className="p-1 h-6"
+                          >
+                            {task.is_completed ? (
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <Circle className="h-5 w-5 text-gray-400" />
+                            )}
+                          </Button>
+                        </div>
+                        <div className="text-sm">
+                          <span className={task.is_completed ? 'line-through text-gray-500' : 'text-gray-800'}>
+                            {task.task_description}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                      {task.completed_at ? `Completed: ${formatCompletionTime(task.completed_at)}` : 'Not completed yet'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

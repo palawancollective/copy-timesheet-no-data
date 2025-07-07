@@ -278,7 +278,121 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
               <CardTitle>Daily Tasks</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/* Mobile View */}
+              <div className="block md:hidden">
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {tasks.map((task) => (
+                    <div key={task.id} className="bg-gray-50 rounded-lg p-3 border">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 pr-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-medium text-gray-500">Priority {task.priority}</span>
+                            <Button
+                              size="sm"
+                              variant={task.is_completed ? "default" : "outline"}
+                              onClick={() => handleToggleTask(task.id, task.is_completed)}
+                              className="h-6 px-2 text-xs"
+                            >
+                              {task.is_completed ? (
+                                <>
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Done
+                                </>
+                              ) : (
+                                '☐ Pending'
+                              )}
+                            </Button>
+                          </div>
+                          {editingTask === task.id ? (
+                            <div className="flex gap-1">
+                              <Input
+                                value={editTaskDescription}
+                                onChange={(e) => setEditTaskDescription(e.target.value)}
+                                className="text-xs"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={handleUpdateTask}
+                                disabled={updateTaskMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700 h-8 px-2"
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingTask(null);
+                                  setEditTaskDescription('');
+                                }}
+                                className="h-8 px-2"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-sm">
+                              <span className={task.is_completed ? 'line-through text-gray-500' : 'text-gray-800'}>
+                                {task.task_description}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-gray-500 mt-2 pt-2 border-t">
+                        <span>
+                          {task.completed_at ? `Completed: ${formatTime(task.completed_at)}` : 'Not completed'}
+                        </span>
+                        <div className="flex gap-1">
+                          {editingTask !== task.id && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditing(task)}
+                                className="h-6 px-1"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700 h-6 px-1"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this task? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteTaskMutation.mutate(task.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
