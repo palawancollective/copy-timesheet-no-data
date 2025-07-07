@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, LogOut, Plus, Edit, Save, X, Trash2 } from 'lucide-react';
+import { Download, LogOut, Plus, Edit, Save, X, Trash2, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { EmployeeTaskManager } from './EmployeeTaskManager';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -371,18 +372,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         </CardContent>
       </Card>
 
-      {/* Employee List */}
+      {/* Employee Task Management */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Employees</CardTitle>
+          <CardTitle className="flex items-center">
+            <Users className="h-5 w-5 mr-2" />
+            Employee Task Management
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {employees.map((employee) => (
-              <div key={employee.id} className="p-4 border rounded-lg bg-gray-50">
-                <h3 className="font-semibold text-lg">{employee.name}</h3>
-                <p className="text-gray-600">₱{employee.hourly_rate}/hour</p>
-              </div>
+              <EmployeeTaskManager key={employee.id} employee={employee} />
             ))}
           </div>
         </CardContent>

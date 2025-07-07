@@ -1,0 +1,404 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Check, X, Edit, Trash2, Clock } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+
+interface Employee {
+  id: string;
+  name: string;
+  hourly_rate: number;
+}
+
+interface Task {
+  id: string;
+  employee_id: string;
+  task_description: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  assigned_date: string;
+  priority: number;
+}
+
+interface EmployeeTaskManagerProps {
+  employee: Employee;
+}
+
+export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employee }) => {
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState('1');
+  const [editingTask, setEditingTask] = useState<string | null>(null);
+  const [editTaskDescription, setEditTaskDescription] = useState('');
+  const queryClient = useQueryClient();
+
+  const getManilaDateTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"})).toISOString();
+  };
+
+  // Fetch employee tasks
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['employeeTasks', employee.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_tasks')
+        .select('*')
+        .eq('employee_id', employee.id)
+        .order('priority', { ascending: true });
+      
+      if (error) throw error;
+      return data as Task[];
+    }
+  });
+
+  // Add task mutation
+  const addTaskMutation = useMutation({
+    mutationFn: async ({ description, priority }: { description: string; priority: number }) => {
+      const { error } = await supabase
+        .from('employee_tasks')
+        .insert({
+          employee_id: employee.id,
+          task_description: description,
+          priority,
+          assigned_date: new Date().toISOString().split('T')[0]
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employeeTasks', employee.id] });
+      setNewTaskDescription('');
+      setNewTaskPriority('1');
+      toast({ title: "Task added successfully!" });
+    }
+  });
+
+  // Toggle task completion mutation
+  const toggleTaskMutation = useMutation({
+    mutationFn: async ({ taskId, isCompleted }: { taskId: string; isCompleted: boolean }) => {
+      const updates = {
+        is_completed: !isCompleted,
+        completed_at: !isCompleted ? getManilaDateTime() : null,
+        updated_at: getManilaDateTime()
+      };
+
+      const { error } = await supabase
+        .from('employee_tasks')
+        .update(updates)
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employeeTasks', employee.id] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      toast({ title: "Task updated successfully!" });
+    }
+  });
+
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ taskId, description }: { taskId: string; description: string }) => {
+      const { error } = await supabase
+        .from('employee_tasks')
+        .update({ 
+          task_description: description,
+          updated_at: getManilaDateTime()
+        })
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employeeTasks', employee.id] });
+      setEditingTask(null);
+      setEditTaskDescription('');
+      toast({ title: "Task updated successfully!" });
+    }
+  });
+
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('employee_tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employeeTasks', employee.id] });
+      toast({ title: "Task deleted successfully!" });
+    }
+  });
+
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskDescription.trim()) return;
+    
+    addTaskMutation.mutate({
+      description: newTaskDescription.trim(),
+      priority: parseInt(newTaskPriority)
+    });
+  };
+
+  const handleToggleTask = (taskId: string, isCompleted: boolean) => {
+    toggleTaskMutation.mutate({ taskId, isCompleted });
+  };
+
+  const startEditing = (task: Task) => {
+    setEditingTask(task.id);
+    setEditTaskDescription(task.task_description);
+  };
+
+  const handleUpdateTask = () => {
+    if (!editingTask || !editTaskDescription.trim()) return;
+    
+    updateTaskMutation.mutate({
+      taskId: editingTask,
+      description: editTaskDescription.trim()
+    });
+  };
+
+  const formatTime = (dateString: string | null) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString('en-US', {
+      timeZone: 'Asia/Manila',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const completedTasks = tasks.filter(task => task.is_completed).length;
+  const totalTasks = tasks.length;
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between">
+              <span>{employee.name}</span>
+              <Badge variant={completedTasks === totalTasks && totalTasks > 0 ? "default" : "secondary"}>
+                {completedTasks}/{totalTasks}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-gray-600">
+              <p>Hourly Rate: ₱{employee.hourly_rate}/hour</p>
+              <p>Tasks: {completedTasks} of {totalTasks} completed</p>
+            </div>
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Task Management - {employee.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Add New Task */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Plus className="h-5 w-5 mr-2" />
+                Add New Task
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddTask} className="flex gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="taskDescription">Task Description</Label>
+                  <Input
+                    id="taskDescription"
+                    value={newTaskDescription}
+                    onChange={(e) => setNewTaskDescription(e.target.value)}
+                    placeholder="Enter task description"
+                    required
+                  />
+                </div>
+                <div className="w-24">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Input
+                    id="priority"
+                    type="number"
+                    min="1"
+                    value={newTaskPriority}
+                    onChange={(e) => setNewTaskPriority(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="submit"
+                    disabled={addTaskMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Add Task
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Tasks List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Daily Tasks</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">Priority</TableHead>
+                      <TableHead>Task Description</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                      <TableHead className="w-32">Completed At</TableHead>
+                      <TableHead className="w-32">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell>{task.priority}</TableCell>
+                        <TableCell>
+                          {editingTask === task.id ? (
+                            <Input
+                              value={editTaskDescription}
+                              onChange={(e) => setEditTaskDescription(e.target.value)}
+                              className="w-full"
+                            />
+                          ) : (
+                            <span className={task.is_completed ? 'line-through text-gray-500' : ''}>
+                              {task.task_description}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant={task.is_completed ? "default" : "outline"}
+                            onClick={() => handleToggleTask(task.id, task.is_completed)}
+                            className="w-full"
+                          >
+                            {task.is_completed ? (
+                              <>
+                                <Check className="h-3 w-3 mr-1" />
+                                Done
+                              </>
+                            ) : (
+                              '☐ Pending'
+                            )}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          {formatTime(task.completed_at)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-1">
+                            {editingTask === task.id ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={handleUpdateTask}
+                                  disabled={updateTaskMutation.isPending}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingTask(null);
+                                    setEditTaskDescription('');
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => startEditing(task)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this task? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteTaskMutation.mutate(task.id)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

@@ -9,7 +9,124 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      employee_tasks: {
+        Row: {
+          assigned_date: string
+          completed_at: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          is_completed: boolean | null
+          priority: number | null
+          task_description: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_date?: string
+          completed_at?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_completed?: boolean | null
+          priority?: number | null
+          task_description: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_date?: string
+          completed_at?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_completed?: boolean | null
+          priority?: number | null
+          task_description?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_tasks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          hourly_rate: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      time_entries: {
+        Row: {
+          clock_in: string | null
+          clock_out: string | null
+          created_at: string
+          employee_id: string
+          entry_date: string
+          id: string
+          is_paid: boolean | null
+          lunch_in: string | null
+          lunch_out: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          clock_in?: string | null
+          clock_out?: string | null
+          created_at?: string
+          employee_id: string
+          entry_date?: string
+          id?: string
+          is_paid?: boolean | null
+          lunch_in?: string | null
+          lunch_out?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clock_in?: string | null
+          clock_out?: string | null
+          created_at?: string
+          employee_id?: string
+          entry_date?: string
+          id?: string
+          is_paid?: boolean | null
+          lunch_in?: string | null
+          lunch_out?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
