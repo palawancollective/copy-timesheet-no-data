@@ -15,6 +15,7 @@ export const TimeTrackingApp = () => {
   const [showPaidPasskeyModal, setShowPaidPasskeyModal] = useState(false);
   const [showInvoiceMode, setShowInvoiceMode] = useState(false);
   const [showScheduleMode, setShowScheduleMode] = useState(false);
+  const [showInvoicePasskeyModal, setShowInvoicePasskeyModal] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -48,6 +49,17 @@ export const TimeTrackingApp = () => {
     }
   };
 
+  const handleInvoiceAccess = (passkey: string) => {
+    if (passkey === '4467') {
+      setShowInvoicePasskeyModal(false);
+      setShowInvoiceMode(true);
+      setShowScheduleMode(false);
+      setIsAdminMode(false);
+    } else {
+      alert('Invalid passkey!');
+    }
+  };
+
   const handleAdminLogout = () => {
     setIsAdminMode(false);
   };
@@ -57,9 +69,7 @@ export const TimeTrackingApp = () => {
   };
 
   const handleInvoiceButtonClick = () => {
-    setShowInvoiceMode(true);
-    setShowScheduleMode(false);
-    setIsAdminMode(false);
+    setShowInvoicePasskeyModal(true);
   };
 
   const handleScheduleButtonClick = () => {
@@ -217,6 +227,13 @@ export const TimeTrackingApp = () => {
         <PasskeyModal
           onSubmit={handlePaidAccess}
           onClose={() => setShowPaidPasskeyModal(false)}
+        />
+      )}
+
+      {showInvoicePasskeyModal && (
+        <PasskeyModal
+          onSubmit={handleInvoiceAccess}
+          onClose={() => setShowInvoicePasskeyModal(false)}
         />
       )}
 
