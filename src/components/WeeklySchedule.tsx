@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -6,19 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Calendar, Clock, Plus, Edit, Trash2, Copy, MoreHorizontal, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Employee {
   id: string;
@@ -39,13 +40,31 @@ interface Schedule {
   };
 }
 
+interface ShiftModalData {
+  employee_id: string;
+  date: string;
+  time_in: string;
+  time_out: string;
+  schedule_id?: string;
+}
+
+// Common shift presets
+const SHIFT_PRESETS = [
+  { label: 'Morning Shift', time_in: '07:00', time_out: '15:00' },
+  { label: 'Day Shift', time_in: '09:00', time_out: '17:00' },
+  { label: 'Evening Shift', time_in: '15:00', time_out: '23:00' },
+  { label: 'Night Shift', time_in: '23:00', time_out: '07:00' },
+];
+
 export const WeeklySchedule: React.FC = () => {
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [timeIn, setTimeIn] = useState<string>('');
-  const [timeOut, setTimeOut] = useState<string>('');
-  const [editingSchedule, setEditingSchedule] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [shiftModalData, setShiftModalData] = useState<ShiftModalData>({
+    employee_id: '',
+    date: '',
+    time_in: '09:00',
+    time_out: '17:00'
+  });
+  const [draggedSchedule, setDraggedSchedule] = useState<Schedule | null>(null);
   const queryClient = useQueryClient();
 
   // Get current week's Sunday
@@ -67,7 +86,8 @@ export const WeeklySchedule: React.FC = () => {
       dates.push({
         date: date.toISOString().split('T')[0],
         dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        dayNumber: date.getDate()
+        dayNumber: date.getDate(),
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       });
     }
     return dates;
@@ -111,7 +131,7 @@ export const WeeklySchedule: React.FC = () => {
       if (error) throw error;
       return data as Schedule[];
     },
-    refetchInterval: 5000 // Real-time updates every 5 seconds
+    refetchInterval: 3000 // Real-time updates every 3 seconds
   });
 
   // Add schedule mutation
@@ -125,10 +145,13 @@ export const WeeklySchedule: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
-      setSelectedEmployeeId('');
-      setSelectedDate('');
-      setTimeIn('');
-      setTimeOut('');
+      setIsShiftModalOpen(false);
+      setShiftModalData({
+        employee_id: '',
+        date: '',
+        time_in: '09:00',
+        time_out: '17:00'
+      });
       toast({ title: "Schedule added successfully!" });
     }
   });
@@ -145,8 +168,7 @@ export const WeeklySchedule: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
-      setEditingSchedule(null);
-      setEditForm({});
+      setIsShiftModalOpen(false);
       toast({ title: "Schedule updated successfully!" });
     }
   });
@@ -167,61 +189,74 @@ export const WeeklySchedule: React.FC = () => {
     }
   });
 
-  const handleAddSchedule = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedEmployeeId || !selectedDate || !timeIn || !timeOut) {
+  const openShiftModal = (employeeId: string, date: string, schedule?: Schedule) => {
+    setShiftModalData({
+      employee_id: employeeId,
+      date: date,
+      time_in: schedule?.time_in || '09:00',
+      time_out: schedule?.time_out || '17:00',
+      schedule_id: schedule?.id
+    });
+    setIsShiftModalOpen(true);
+  };
+
+  const handleSaveShift = () => {
+    if (!shiftModalData.employee_id || !shiftModalData.date || !shiftModalData.time_in || !shiftModalData.time_out) {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
     }
 
-    if (timeIn >= timeOut) {
+    if (shiftModalData.time_in >= shiftModalData.time_out) {
       toast({ title: "Time out must be after time in", variant: "destructive" });
       return;
     }
 
-    addScheduleMutation.mutate({
-      employee_id: selectedEmployeeId,
-      schedule_date: selectedDate,
-      time_in: timeIn,
-      time_out: timeOut
-    });
-  };
-
-  const startEditing = (schedule: Schedule) => {
-    setEditingSchedule(schedule.id);
-    setEditForm({
-      employee_id: schedule.employee_id,
-      schedule_date: schedule.schedule_date,
-      time_in: schedule.time_in,
-      time_out: schedule.time_out
-    });
-  };
-
-  const handleSubmitEdit = () => {
-    if (!editingSchedule) return;
-
-    if (editForm.time_in >= editForm.time_out) {
-      toast({ title: "Time out must be after time in", variant: "destructive" });
-      return;
+    if (shiftModalData.schedule_id) {
+      // Update existing schedule
+      updateScheduleMutation.mutate({
+        id: shiftModalData.schedule_id,
+        updates: {
+          employee_id: shiftModalData.employee_id,
+          schedule_date: shiftModalData.date,
+          time_in: shiftModalData.time_in,
+          time_out: shiftModalData.time_out
+        }
+      });
+    } else {
+      // Add new schedule
+      addScheduleMutation.mutate({
+        employee_id: shiftModalData.employee_id,
+        schedule_date: shiftModalData.date,
+        time_in: shiftModalData.time_in,
+        time_out: shiftModalData.time_out
+      });
     }
+  };
 
-    updateScheduleMutation.mutate({
-      id: editingSchedule,
-      updates: editForm
+  const getSchedulesForEmployeeAndDate = (employeeId: string, date: string) => {
+    return schedules.filter(schedule => 
+      schedule.employee_id === employeeId && schedule.schedule_date === date
+    );
+  };
+
+  const copyShiftToOtherDays = (schedule: Schedule) => {
+    const shiftsToAdd = weekDates
+      .filter(day => day.date !== schedule.schedule_date)
+      .map(day => ({
+        employee_id: schedule.employee_id,
+        schedule_date: day.date,
+        time_in: schedule.time_in,
+        time_out: schedule.time_out
+      }));
+
+    Promise.all(
+      shiftsToAdd.map(shift => 
+        supabase.from('weekly_schedules').insert(shift)
+      )
+    ).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
+      toast({ title: "Shift copied to all days this week!" });
     });
-  };
-
-  const cancelEdit = () => {
-    setEditingSchedule(null);
-    setEditForm({});
-  };
-
-  const handleDeleteSchedule = (id: string) => {
-    deleteScheduleMutation.mutate(id);
-  };
-
-  const getSchedulesForDate = (date: string) => {
-    return schedules.filter(schedule => schedule.schedule_date === date);
   };
 
   const formatTime = (time: string) => {
@@ -232,21 +267,177 @@ export const WeeklySchedule: React.FC = () => {
     });
   };
 
+  const handleDragStart = (e: React.DragEvent, schedule: Schedule) => {
+    setDraggedSchedule(schedule);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, employeeId: string, date: string) => {
+    e.preventDefault();
+    if (draggedSchedule && draggedSchedule.employee_id !== employeeId) {
+      // Move schedule to different employee
+      updateScheduleMutation.mutate({
+        id: draggedSchedule.id,
+        updates: {
+          employee_id: employeeId,
+          schedule_date: date
+        }
+      });
+    } else if (draggedSchedule && draggedSchedule.schedule_date !== date) {
+      // Move schedule to different date
+      updateScheduleMutation.mutate({
+        id: draggedSchedule.id,
+        updates: {
+          schedule_date: date
+        }
+      });
+    }
+    setDraggedSchedule(null);
+  };
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calendar className="h-5 w-5 mr-2" />
-            Weekly Schedule Management
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2" />
+              Weekly Schedule Manager
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Week of {weekDates[0]?.fullDate} - {weekDates[6]?.fullDate}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Add Schedule Form */}
-          <form onSubmit={handleAddSchedule} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          {/* Mobile/Tablet Responsive Grid Layout */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[800px]">
+              {/* Header Row */}
+              <div className="grid grid-cols-8 gap-2 mb-4">
+                <div className="p-3 font-semibold text-center bg-muted rounded">
+                  <User className="h-4 w-4 mx-auto mb-1" />
+                  Employee
+                </div>
+                {weekDates.map((day) => (
+                  <div key={day.date} className="p-3 text-center bg-muted rounded">
+                    <div className="font-semibold">{day.dayName}</div>
+                    <div className="text-xs text-muted-foreground">{day.dayNumber}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Employee Rows */}
+              {employees.map((employee) => (
+                <div key={employee.id} className="grid grid-cols-8 gap-2 mb-3">
+                  {/* Employee Name Column */}
+                  <div className="p-3 bg-card border rounded flex items-center">
+                    <div className="font-medium truncate">{employee.name}</div>
+                  </div>
+
+                  {/* Daily Schedule Columns */}
+                  {weekDates.map((day) => {
+                    const daySchedules = getSchedulesForEmployeeAndDate(employee.id, day.date);
+                    
+                    return (
+                      <div
+                        key={`${employee.id}-${day.date}`}
+                        className="min-h-[80px] p-2 bg-card border rounded relative hover:bg-accent/50 transition-colors"
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, employee.id, day.date)}
+                      >
+                        {daySchedules.length === 0 ? (
+                          // Empty cell - click to add shift
+                          <button
+                            onClick={() => openShiftModal(employee.id, day.date)}
+                            className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors group"
+                          >
+                            <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                          </button>
+                        ) : (
+                          // Show schedules
+                          <div className="space-y-1">
+                            {daySchedules.map((schedule) => (
+                              <div
+                                key={schedule.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, schedule)}
+                                className="bg-primary/10 border border-primary/20 rounded p-2 text-xs cursor-move hover:bg-primary/20 transition-colors group"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <Clock className="h-3 w-3 inline mr-1" />
+                                    <span className="font-medium">
+                                      {formatTime(schedule.time_in)} - {formatTime(schedule.time_out)}
+                                    </span>
+                                  </div>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <MoreHorizontal className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => openShiftModal(employee.id, day.date, schedule)}
+                                      >
+                                        <Edit className="h-3 w-3 mr-2" />
+                                        Edit Shift
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => copyShiftToOtherDays(schedule)}
+                                      >
+                                        <Copy className="h-3 w-3 mr-2" />
+                                        Copy to Week
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => deleteScheduleMutation.mutate(schedule.id)}
+                                        className="text-destructive"
+                                      >
+                                        <Trash2 className="h-3 w-3 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Shift Modal */}
+      <Dialog open={isShiftModalOpen} onOpenChange={setIsShiftModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {shiftModalData.schedule_id ? 'Edit Shift' : 'Add New Shift'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="employee">Employee</Label>
-              <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+              <Label>Employee</Label>
+              <Select
+                value={shiftModalData.employee_id}
+                onValueChange={(value) => setShiftModalData(prev => ({ ...prev, employee_id: value }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Employee" />
                 </SelectTrigger>
@@ -259,167 +450,73 @@ export const WeeklySchedule: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label htmlFor="date">Date</Label>
+              <Label>Date</Label>
               <Input
                 type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                required
+                value={shiftModalData.date}
+                onChange={(e) => setShiftModalData(prev => ({ ...prev, date: e.target.value }))}
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Time In</Label>
+                <Input
+                  type="time"
+                  value={shiftModalData.time_in}
+                  onChange={(e) => setShiftModalData(prev => ({ ...prev, time_in: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Time Out</Label>
+                <Input
+                  type="time"
+                  value={shiftModalData.time_out}
+                  onChange={(e) => setShiftModalData(prev => ({ ...prev, time_out: e.target.value }))}
+                />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="timeIn">Time In</Label>
-              <Input
-                type="time"
-                value={timeIn}
-                onChange={(e) => setTimeIn(e.target.value)}
-                required
-              />
+              <Label>Quick Presets</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {SHIFT_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShiftModalData(prev => ({
+                      ...prev,
+                      time_in: preset.time_in,
+                      time_out: preset.time_out
+                    }))}
+                    className="text-xs"
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div>
-              <Label htmlFor="timeOut">Time Out</Label>
-              <Input
-                type="time"
-                value={timeOut}
-                onChange={(e) => setTimeOut(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex items-end">
+
+            <div className="flex justify-end space-x-2 pt-4">
               <Button
-                type="submit"
-                disabled={addScheduleMutation.isPending}
-                className="w-full"
+                variant="outline"
+                onClick={() => setIsShiftModalOpen(false)}
               >
-                <Plus className="h-4 w-4 mr-1" />
-                Add
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveShift}
+                disabled={addScheduleMutation.isPending || updateScheduleMutation.isPending}
+              >
+                {shiftModalData.schedule_id ? 'Update' : 'Add'} Shift
               </Button>
             </div>
-          </form>
-
-          {/* Weekly Schedule Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-            {weekDates.map((dayInfo) => (
-              <Card key={dayInfo.date} className="min-h-40">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-center">
-                    <div className="font-bold">{dayInfo.dayName}</div>
-                    <div className="text-xs text-gray-600">{dayInfo.dayNumber}</div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {getSchedulesForDate(dayInfo.date).map((schedule) => {
-                      const isEditing = editingSchedule === schedule.id;
-                      
-                      return (
-                        <div key={schedule.id} className="bg-blue-50 rounded p-2 text-xs">
-                          {isEditing ? (
-                            <div className="space-y-2">
-                              <Select
-                                value={editForm.employee_id}
-                                onValueChange={(value) => setEditForm({...editForm, employee_id: value})}
-                              >
-                                <SelectTrigger className="h-6 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {employees.map((employee) => (
-                                    <SelectItem key={employee.id} value={employee.id}>
-                                      {employee.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Input
-                                type="time"
-                                value={editForm.time_in}
-                                onChange={(e) => setEditForm({...editForm, time_in: e.target.value})}
-                                className="h-6 text-xs"
-                              />
-                              <Input
-                                type="time"
-                                value={editForm.time_out}
-                                onChange={(e) => setEditForm({...editForm, time_out: e.target.value})}
-                                className="h-6 text-xs"
-                              />
-                              <div className="flex gap-1">
-                                <Button
-                                  onClick={handleSubmitEdit}
-                                  size="sm"
-                                  className="h-6 px-2 text-xs"
-                                  disabled={updateScheduleMutation.isPending}
-                                >
-                                  <Save className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  onClick={cancelEdit}
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 px-2 text-xs"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="font-medium text-blue-800">{schedule.employees.name}</div>
-                              <div className="text-blue-600">
-                                <Clock className="h-3 w-3 inline mr-1" />
-                                {formatTime(schedule.time_in)} - {formatTime(schedule.time_out)}
-                              </div>
-                              <div className="flex gap-1 mt-1">
-                                <Button
-                                  onClick={() => startEditing(schedule)}
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-5 px-1 text-xs"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-5 px-1 text-xs text-red-600 hover:text-red-700"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Schedule</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete this schedule for {schedule.employees.name}?
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleDeleteSchedule(schedule.id)}
-                                        className="bg-red-600 hover:bg-red-700"
-                                      >
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
