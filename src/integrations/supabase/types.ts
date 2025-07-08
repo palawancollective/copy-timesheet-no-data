@@ -132,6 +132,44 @@ export type Database = {
           },
         ]
       }
+      weekly_schedules: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          schedule_date: string
+          time_in: string
+          time_out: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          schedule_date: string
+          time_in: string
+          time_out: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          schedule_date?: string
+          time_in?: string
+          time_out?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_schedules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

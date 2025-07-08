@@ -126,11 +126,14 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onEdit 
             {/* Company Info */}
             <div className="flex items-start gap-4 mb-4 md:mb-0">
               {companyLogo && (
-                <img 
-                  src={companyLogo} 
-                  alt="Company Logo" 
-                  className="w-20 h-20 object-contain"
-                />
+                <div className="flex-shrink-0 w-20 h-20 border border-gray-200 rounded bg-white p-1">
+                  <img 
+                    src={companyLogo} 
+                    alt="Company Logo" 
+                    className="w-full h-full object-contain print:object-contain"
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  />
+                </div>
               )}
               <div className="space-y-1">
                 <h2 className="text-xl font-bold text-slate-700">{invoice.company?.name || 'Company Name'}</h2>

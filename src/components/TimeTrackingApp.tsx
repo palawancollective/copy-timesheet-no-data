@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, DollarSign, FileText } from 'lucide-react';
+import { Clock, DollarSign, FileText, Calendar } from 'lucide-react';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
 import { PaidModal } from './PaidModal';
 import { InvoiceGenerator } from './InvoiceGenerator';
+import { WeeklySchedule } from './WeeklySchedule';
 
 export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -13,6 +14,7 @@ export const TimeTrackingApp = () => {
   const [showPaidModal, setShowPaidModal] = useState(false);
   const [showPaidPasskeyModal, setShowPaidPasskeyModal] = useState(false);
   const [showInvoiceMode, setShowInvoiceMode] = useState(false);
+  const [showScheduleMode, setShowScheduleMode] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export const TimeTrackingApp = () => {
     if (passkey === '4467') {
       setIsAdminMode(true);
       setShowInvoiceMode(false);
+      setShowScheduleMode(false);
       setShowPasskeyModal(false);
     } else {
       alert('Invalid passkey!');
@@ -55,6 +58,13 @@ export const TimeTrackingApp = () => {
 
   const handleInvoiceButtonClick = () => {
     setShowInvoiceMode(true);
+    setShowScheduleMode(false);
+    setIsAdminMode(false);
+  };
+
+  const handleScheduleButtonClick = () => {
+    setShowScheduleMode(true);
+    setShowInvoiceMode(false);
     setIsAdminMode(false);
   };
 
@@ -101,24 +111,31 @@ export const TimeTrackingApp = () => {
             </div>
             
             {/* Bottom Row - Buttons */}
-            <div className="flex space-x-2 w-full">
+            <div className="grid grid-cols-2 gap-2 w-full">
               <button
                 onClick={handlePaidButtonClick}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm"
+                className="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
               >
-                <DollarSign className="h-4 w-4 mr-1" />
+                <DollarSign className="h-3 w-3 mr-1" />
                 Paid
               </button>
               <button
                 onClick={handleInvoiceButtonClick}
-                className={`flex-1 ${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-3 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm`}
+                className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs`}
               >
-                <FileText className="h-4 w-4 mr-1" />
+                <FileText className="h-3 w-3 mr-1" />
                 Invoice
               </button>
               <button
+                onClick={handleScheduleButtonClick}
+                className={`${showScheduleMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700'} text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs`}
+              >
+                <Calendar className="h-3 w-3 mr-1" />
+                Schedule
+              </button>
+              <button
                 onClick={() => setShowPasskeyModal(true)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold transition-colors text-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors text-xs"
               >
                 Admin
               </button>
@@ -157,6 +174,13 @@ export const TimeTrackingApp = () => {
                 Invoice
               </button>
               <button
+                onClick={handleScheduleButtonClick}
+                className={`${showScheduleMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule
+              </button>
+              <button
                 onClick={() => setShowPasskeyModal(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
@@ -174,6 +198,8 @@ export const TimeTrackingApp = () => {
             <AdminPanel onLogout={handleAdminLogout} />
           ) : showInvoiceMode ? (
             <InvoiceGenerator />
+          ) : showScheduleMode ? (
+            <WeeklySchedule />
           ) : (
             <MainDisplay />
           )}
