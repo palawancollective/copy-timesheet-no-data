@@ -46,9 +46,10 @@ interface Task {
 
 interface EmployeeTaskManagerProps {
   employee: Employee;
+  isAdminMode?: boolean;
 }
 
-export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employee }) => {
+export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employee, isAdminMode = false }) => {
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('1');
   const [editingTask, setEditingTask] = useState<string | null>(null);
@@ -228,49 +229,51 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Add New Task */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Plus className="h-5 w-5 mr-2" />
-                Add New Task
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddTask} className="flex gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="taskDescription">Task Description</Label>
-                  <Input
-                    id="taskDescription"
-                    value={newTaskDescription}
-                    onChange={(e) => setNewTaskDescription(e.target.value)}
-                    placeholder="Enter task description"
-                    required
-                  />
-                </div>
-                <div className="w-24">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Input
-                    id="priority"
-                    type="number"
-                    min="1"
-                    value={newTaskPriority}
-                    onChange={(e) => setNewTaskPriority(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    type="submit"
-                    disabled={addTaskMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Add Task
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+          {/* Add New Task - Admin Only */}
+          {isAdminMode && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add New Task
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddTask} className="flex gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="taskDescription">Task Description</Label>
+                    <Input
+                      id="taskDescription"
+                      value={newTaskDescription}
+                      onChange={(e) => setNewTaskDescription(e.target.value)}
+                      placeholder="Enter task description"
+                      required
+                    />
+                  </div>
+                  <div className="w-24">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Input
+                      id="priority"
+                      type="number"
+                      min="1"
+                      value={newTaskPriority}
+                      onChange={(e) => setNewTaskPriority(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      type="submit"
+                      disabled={addTaskMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Add Task
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Tasks List */}
           <Card>
@@ -344,7 +347,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                           {task.completed_at ? `Completed: ${formatTime(task.completed_at)}` : 'Not completed'}
                         </span>
                         <div className="flex gap-1">
-                          {editingTask !== task.id && (
+                          {editingTask !== task.id && isAdminMode && (
                             <>
                               <Button
                                 size="sm"
@@ -442,7 +445,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-1">
-                            {editingTask === task.id ? (
+                            {editingTask === task.id && isAdminMode ? (
                               <>
                                 <Button
                                   size="sm"
@@ -463,7 +466,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                                   <X className="h-3 w-3" />
                                 </Button>
                               </>
-                            ) : (
+                            ) : isAdminMode ? (
                               <>
                                 <Button
                                   size="sm"
@@ -501,7 +504,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                                   </AlertDialogContent>
                                 </AlertDialog>
                               </>
-                            )}
+                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>

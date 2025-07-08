@@ -200,7 +200,7 @@ export const TimeTrackingApp = () => {
           ) : showInvoiceMode ? (
             <InvoiceGenerator />
           ) : (
-            <MainDisplay />
+            <MainDisplay isAdminMode={isAdminMode} />
           )}
         </div>
       </main>
