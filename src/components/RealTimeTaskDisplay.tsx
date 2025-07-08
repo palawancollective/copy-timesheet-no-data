@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Clock, User, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Clock, User, TrendingUp, Home } from 'lucide-react';
 
 interface Employee {
   id: string;
@@ -31,7 +32,7 @@ interface TaskSummary {
   recentCompletions: TaskWithEmployee[];
 }
 
-export const RealTimeTaskDisplay: React.FC = () => {
+export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoHome }) => {
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split('T')[0];
 
@@ -161,6 +162,19 @@ export const RealTimeTaskDisplay: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Home Button */}
+      {onGoHome && (
+        <div className="flex justify-center">
+          <Button 
+            onClick={onGoHome}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 animate-fade-in hover-scale"
+          >
+            <Home className="h-5 w-5 mr-2" />
+            Back to Employee Clock-In
+          </Button>
+        </div>
+      )}
 
       {/* Employee Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

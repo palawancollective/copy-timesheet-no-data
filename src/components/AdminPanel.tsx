@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, LogOut, Plus, Edit, Save, X, Trash2, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { EmployeeTaskManager } from './EmployeeTaskManager';
+import { WeeklySchedule } from './schedule/WeeklySchedule';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -372,19 +373,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         </CardContent>
       </Card>
 
-      {/* Employee Task Management */}
+      {/* Employee Task Management with Schedule */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <Users className="h-5 w-5 mr-2" />
-            Employee Task Management
+            Employee Task & Schedule Management
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {employees.map((employee) => (
-              <EmployeeTaskManager key={employee.id} employee={employee} />
-            ))}
+        <CardContent className="space-y-6">
+          {/* Schedule Section */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Weekly Schedule Management</h3>
+            <WeeklySchedule isAdminMode={true} />
+          </div>
+          
+          {/* Task Management Section */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Task Assignment</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {employees.map((employee) => (
+                <EmployeeTaskManager key={employee.id} employee={employee} />
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

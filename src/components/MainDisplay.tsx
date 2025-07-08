@@ -267,7 +267,12 @@ export const MainDisplay = () => {
         </TabsContent>
         
         <TabsContent value="tasks">
-          <RealTimeTaskDisplay />
+          <RealTimeTaskDisplay onGoHome={() => {
+            // Switch to employee clock-in tab
+            const tabsList = document.querySelector('[role="tablist"]');
+            const employeeTab = tabsList?.querySelector('[value="employee"]') as HTMLElement;
+            employeeTab?.click();
+          }} />
         </TabsContent>
       </Tabs>
     </div>

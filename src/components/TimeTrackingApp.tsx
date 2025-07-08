@@ -63,9 +63,10 @@ export const TimeTrackingApp = () => {
   };
 
   const handleScheduleButtonClick = () => {
-    setShowScheduleMode(true);
+    // Redirect to admin panel instead of separate schedule mode
+    setIsAdminMode(true);
+    setShowScheduleMode(false);
     setShowInvoiceMode(false);
-    setIsAdminMode(false);
   };
 
   const formatTime = (date: Date) => {
@@ -198,8 +199,6 @@ export const TimeTrackingApp = () => {
             <AdminPanel onLogout={handleAdminLogout} />
           ) : showInvoiceMode ? (
             <InvoiceGenerator />
-          ) : showScheduleMode ? (
-            <WeeklySchedule isAdminMode={isAdminMode} />
           ) : (
             <MainDisplay />
           )}
