@@ -199,7 +199,7 @@ export const TimeTrackingApp = () => {
           ) : showInvoiceMode ? (
             <InvoiceGenerator />
           ) : showScheduleMode ? (
-            <WeeklySchedule />
+            <WeeklySchedule isAdminMode={isAdminMode} />
           ) : (
             <MainDisplay />
           )}
