@@ -85,7 +85,7 @@ export const EmployeeClockIn: React.FC = () => {
     }
   });
 
-  // Fetch today's tasks for selected employee (show both today's and unfinished previous tasks)
+  // Fetch today's tasks for selected employee (only show incomplete tasks)
   const { data: todaysTasks = [] } = useQuery({
     queryKey: ['todaysTasks', selectedEmployeeId],
     queryFn: async () => {
@@ -96,6 +96,7 @@ export const EmployeeClockIn: React.FC = () => {
         .from('employee_tasks')
         .select('*')
         .eq('employee_id', selectedEmployeeId)
+        .eq('is_completed', false)
         .or(`assigned_date.eq.${today},and(assigned_date.lt.${today},is_completed.eq.false)`)
         .order('assigned_date', { ascending: false })
         .order('priority', { ascending: true });
@@ -104,7 +105,7 @@ export const EmployeeClockIn: React.FC = () => {
       return data as Task[];
     },
     enabled: !!selectedEmployeeId,
-    refetchInterval: 5000 // Refetch every 5 seconds for real-time updates
+    refetchInterval: 1000 // Faster refresh for real-time updates
   });
 
   // Check if employee is already clocked in today
