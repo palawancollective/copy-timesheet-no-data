@@ -6,7 +6,7 @@ import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
 import { PaidModal } from './PaidModal';
 import { InvoiceGenerator } from './InvoiceGenerator';
-import { WeeklySchedule } from './WeeklySchedule';
+import { WeeklySchedule } from './schedule/WeeklySchedule';
 
 export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
