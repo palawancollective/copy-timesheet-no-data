@@ -100,7 +100,8 @@ export const EmployeeClockIn: React.FC = () => {
       if (error) throw error;
       return data as Task[];
     },
-    enabled: !!selectedEmployeeId
+    enabled: !!selectedEmployeeId,
+    refetchInterval: 5000 // Refetch every 5 seconds for real-time updates
   });
 
   // Check if employee is already clocked in today
