@@ -103,10 +103,17 @@ export const TimeTrackingApp = () => {
           <div className="flex flex-col space-y-3 md:hidden">
             {/* Top Row - Logo and Time */}
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
+              <button 
+                onClick={() => {
+                  setIsAdminMode(false);
+                  setShowInvoiceMode(false);
+                  setShowScheduleMode(false);
+                }}
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              >
                 <Clock className="h-6 w-6 text-blue-600" />
                 <h1 className="text-lg font-bold text-gray-800">Time Tracker</h1>
-              </div>
+              </button>
               <div className="text-right">
                 <div className="text-lg font-mono font-bold text-blue-600">
                   {formatTime(currentTime)}
@@ -144,10 +151,17 @@ export const TimeTrackingApp = () => {
 
           {/* Desktop Layout */}
           <div className="hidden md:flex justify-between items-center">
-            <div className="flex items-center space-x-3">
+            <button 
+              onClick={() => {
+                setIsAdminMode(false);
+                setShowInvoiceMode(false);
+                setShowScheduleMode(false);
+              }}
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+            >
               <Clock className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-800">Time Tracker</h1>
-            </div>
+            </button>
             
             <div className="text-center">
               <div className="text-3xl font-mono font-bold text-blue-600">

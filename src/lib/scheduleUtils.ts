@@ -2,10 +2,9 @@ import { WeekDay } from '@/types/schedule';
 
 // Common shift presets
 export const SHIFT_PRESETS = [
-  { label: 'Morning Shift', time_in: '07:00', time_out: '15:00' },
-  { label: 'Day Shift', time_in: '09:00', time_out: '17:00' },
-  { label: 'Evening Shift', time_in: '15:00', time_out: '23:00' },
-  { label: 'Night Shift', time_in: '23:00', time_out: '07:00' },
+  { label: 'Morning Shift', time_in: '07:00', time_out: '16:00' },
+  { label: 'Evening Shift', time_in: '12:00', time_out: '21:00' },
+  { label: 'Maintenance Shift', time_in: '08:00', time_out: '17:00' },
 ];
 
 // Get current week's Sunday

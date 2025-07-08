@@ -206,9 +206,15 @@ export const MainDisplay = ({ isAdminMode = false }: { isAdminMode?: boolean }) 
           <RealTimeTaskDisplay onGoHome={() => {
             // Switch to employee clock-in tab
             const tabsList = document.querySelector('[role="tablist"]');
-            const employeeTab = tabsList?.querySelector('[value="employee"]') as HTMLElement;
+            const employeeTab = tabsList?.querySelector('[data-state="inactive"][value="employee"]') as HTMLElement;
             if (employeeTab) {
               employeeTab.click();
+            } else {
+              // Fallback: try finding by value attribute
+              const fallbackTab = document.querySelector('[value="employee"]') as HTMLElement;
+              if (fallbackTab) {
+                fallbackTab.click();
+              }
             }
           }} />
         </TabsContent>

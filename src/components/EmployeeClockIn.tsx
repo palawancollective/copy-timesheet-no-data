@@ -34,6 +34,8 @@ interface TimeEntry {
   entry_date: string;
   clock_in: string | null;
   clock_out: string | null;
+  lunch_out: string | null;
+  lunch_in: string | null;
 }
 
 export const EmployeeClockIn: React.FC = () => {
@@ -177,6 +179,66 @@ export const EmployeeClockIn: React.FC = () => {
     }
   });
 
+  // Clock out mutation
+  const clockOutMutation = useMutation({
+    mutationFn: async (employeeId: string) => {
+      const now = getManilaDateTime();
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { error } = await supabase
+        .from('time_entries')
+        .update({ clock_out: now, updated_at: now })
+        .eq('employee_id', employeeId)
+        .eq('entry_date', today);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      toast({ title: "Successfully clocked out!" });
+    }
+  });
+
+  // Lunch out mutation
+  const lunchOutMutation = useMutation({
+    mutationFn: async (employeeId: string) => {
+      const now = getManilaDateTime();
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { error } = await supabase
+        .from('time_entries')
+        .update({ lunch_out: now, updated_at: now })
+        .eq('employee_id', employeeId)
+        .eq('entry_date', today);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      toast({ title: "Lunch out recorded!" });
+    }
+  });
+
+  // Lunch in mutation
+  const lunchInMutation = useMutation({
+    mutationFn: async (employeeId: string) => {
+      const now = getManilaDateTime();
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { error } = await supabase
+        .from('time_entries')
+        .update({ lunch_in: now, updated_at: now })
+        .eq('employee_id', employeeId)
+        .eq('entry_date', today);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      toast({ title: "Lunch in recorded!" });
+    }
+  });
+
   // Toggle task completion mutation
   const toggleTaskMutation = useMutation({
     mutationFn: async ({ taskId, isCompleted }: { taskId: string; isCompleted: boolean }) => {
@@ -229,6 +291,21 @@ export const EmployeeClockIn: React.FC = () => {
   const handleClockIn = () => {
     if (!selectedEmployeeId) return;
     clockInMutation.mutate(selectedEmployeeId);
+  };
+
+  const handleClockOut = () => {
+    if (!selectedEmployeeId) return;
+    clockOutMutation.mutate(selectedEmployeeId);
+  };
+
+  const handleLunchOut = () => {
+    if (!selectedEmployeeId) return;
+    lunchOutMutation.mutate(selectedEmployeeId);
+  };
+
+  const handleLunchIn = () => {
+    if (!selectedEmployeeId) return;
+    lunchInMutation.mutate(selectedEmployeeId);
   };
 
   const handleToggleTask = (taskId: string, isCompleted: boolean) => {
@@ -293,11 +370,11 @@ export const EmployeeClockIn: React.FC = () => {
             )}
             
             {todaysTimeEntry && (
-              <div className="text-center">
+              <div className="text-center space-y-4">
                 <Badge variant="default" className="text-lg px-4 py-2">
                   ✅ Already Clocked In Today
                 </Badge>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-600">
                   Clocked in at: {new Date(todaysTimeEntry.clock_in!).toLocaleString('en-US', {
                     timeZone: 'Asia/Manila',
                     hour: '2-digit',
@@ -305,6 +382,50 @@ export const EmployeeClockIn: React.FC = () => {
                     hour12: true
                   })}
                 </p>
+                
+                {/* Clock Out and Lunch Buttons */}
+                <div className="flex flex-col gap-3">
+                  {!todaysTimeEntry.lunch_out && (
+                    <Button
+                      onClick={handleLunchOut}
+                      disabled={lunchOutMutation.isPending}
+                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                    >
+                      Lunch Out
+                    </Button>
+                  )}
+                  
+                  {todaysTimeEntry.lunch_out && !todaysTimeEntry.lunch_in && (
+                    <Button
+                      onClick={handleLunchIn}
+                      disabled={lunchInMutation.isPending}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Lunch In
+                    </Button>
+                  )}
+                  
+                  {!todaysTimeEntry.clock_out && (
+                    <Button
+                      onClick={handleClockOut}
+                      disabled={clockOutMutation.isPending}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Clock Out
+                    </Button>
+                  )}
+                  
+                  {todaysTimeEntry.clock_out && (
+                    <Badge variant="secondary" className="text-sm px-3 py-2">
+                      ✅ Clocked Out at: {new Date(todaysTimeEntry.clock_out).toLocaleString('en-US', {
+                        timeZone: 'Asia/Manila',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </Badge>
+                  )}
+                </div>
               </div>
             )}
 
