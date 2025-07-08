@@ -62,6 +62,8 @@ export const TimeTrackingApp = () => {
 
   const handleAdminLogout = () => {
     setIsAdminMode(false);
+    setShowInvoiceMode(false);
+    setShowScheduleMode(false);
   };
 
   const handlePaidButtonClick = () => {

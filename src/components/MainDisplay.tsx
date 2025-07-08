@@ -193,76 +193,10 @@ export const MainDisplay = ({ isAdminMode = false }: { isAdminMode?: boolean }) 
   return (
     <div className="w-full max-w-full space-y-4 md:space-y-6 overflow-x-hidden">
       <Tabs defaultValue="employee" className="w-full">
-        <TabsList className={`grid w-full ${isAdminMode ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          {isAdminMode && <TabsTrigger value="admin">Admin Clock</TabsTrigger>}
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="employee">Employee Clock-In</TabsTrigger>
           <TabsTrigger value="tasks">Task Progress</TabsTrigger>
         </TabsList>
-        
-        {isAdminMode && (
-          <TabsContent value="admin" className="space-y-4 md:space-y-6">
-            {/* Employee Selection */}
-            <div className="bg-white rounded-lg shadow-md p-4 md:p-6 w-full">
-              <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-4">Select Employee</h2>
-              <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose an employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Time Action Buttons */}
-            {selectedEmployeeId && (
-              <div className="bg-white rounded-lg shadow-md p-4 md:p-6 w-full">
-                <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-4">
-                  Time Actions for {selectedEmployee?.name}
-                </h3>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 w-full">
-                  <Button
-                    onClick={() => clockInMutation.mutate(selectedEmployeeId)}
-                    className="bg-green-600 hover:bg-green-700 text-white py-3 text-sm md:text-base w-full"
-                    disabled={clockInMutation.isPending}
-                  >
-                    Clock In
-                  </Button>
-                  <Button
-                    onClick={() => clockOutMutation.mutate(selectedEmployeeId)}
-                    className="bg-red-600 hover:bg-red-700 text-white py-3 text-sm md:text-base w-full"
-                    disabled={clockOutMutation.isPending}
-                  >
-                    Clock Out
-                  </Button>
-                  <Button
-                    onClick={() => lunchOutMutation.mutate(selectedEmployeeId)}
-                    className="bg-orange-600 hover:bg-orange-700 text-white py-3 text-sm md:text-base w-full"
-                    disabled={lunchOutMutation.isPending}
-                  >
-                    Lunch Out
-                  </Button>
-                  <Button
-                    onClick={() => lunchInMutation.mutate(selectedEmployeeId)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm md:text-base w-full"
-                    disabled={lunchInMutation.isPending}
-                  >
-                    Lunch In
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* All Time Entries */}
-            <div className="w-full overflow-x-hidden">
-              <AllTimeEntries entries={allEntries} />
-            </div>
-          </TabsContent>
-        )}
         
         <TabsContent value="employee">
           <EmployeeClockIn />
