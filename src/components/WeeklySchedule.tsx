@@ -315,110 +315,114 @@ export const WeeklySchedule: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Mobile/Tablet Responsive Grid Layout */}
-          <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
-              {/* Header Row */}
-              <div className="grid grid-cols-8 gap-2 mb-4">
-                <div className="p-3 font-semibold text-center bg-muted rounded">
-                  <User className="h-4 w-4 mx-auto mb-1" />
-                  Employee
-                </div>
-                {weekDates.map((day) => (
-                  <div key={day.date} className="p-3 text-center bg-muted rounded">
-                    <div className="font-semibold">{day.dayName}</div>
-                    <div className="text-xs text-muted-foreground">{day.dayNumber}</div>
-                  </div>
-                ))}
+          {/* Fixed Responsive Grid Layout - No Horizontal Scroll */}
+          <div className="w-full">
+            {/* Header Row */}
+            <div className="grid grid-cols-8 gap-1 sm:gap-2 mb-4">
+              <div className="p-1 sm:p-3 font-semibold text-center bg-muted rounded text-xs sm:text-sm">
+                <User className="h-3 w-3 sm:h-4 sm:w-4 mx-auto mb-1" />
+                <span className="hidden sm:inline">Employee</span>
+                <span className="sm:hidden">Emp</span>
               </div>
-
-              {/* Employee Rows */}
-              {employees.map((employee) => (
-                <div key={employee.id} className="grid grid-cols-8 gap-2 mb-3">
-                  {/* Employee Name Column */}
-                  <div className="p-3 bg-card border rounded flex items-center">
-                    <div className="font-medium truncate">{employee.name}</div>
-                  </div>
-
-                  {/* Daily Schedule Columns */}
-                  {weekDates.map((day) => {
-                    const daySchedules = getSchedulesForEmployeeAndDate(employee.id, day.date);
-                    
-                    return (
-                      <div
-                        key={`${employee.id}-${day.date}`}
-                        className="min-h-[80px] p-2 bg-card border rounded relative hover:bg-accent/50 transition-colors"
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, employee.id, day.date)}
-                      >
-                        {daySchedules.length === 0 ? (
-                          // Empty cell - click to add shift
-                          <button
-                            onClick={() => openShiftModal(employee.id, day.date)}
-                            className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors group"
-                          >
-                            <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                          </button>
-                        ) : (
-                          // Show schedules
-                          <div className="space-y-1">
-                            {daySchedules.map((schedule) => (
-                              <div
-                                key={schedule.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, schedule)}
-                                className="bg-primary/10 border border-primary/20 rounded p-2 text-xs cursor-move hover:bg-primary/20 transition-colors group"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <Clock className="h-3 w-3 inline mr-1" />
-                                    <span className="font-medium">
-                                      {formatTime(schedule.time_in)} - {formatTime(schedule.time_out)}
-                                    </span>
-                                  </div>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      >
-                                        <MoreHorizontal className="h-3 w-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem
-                                        onClick={() => openShiftModal(employee.id, day.date, schedule)}
-                                      >
-                                        <Edit className="h-3 w-3 mr-2" />
-                                        Edit Shift
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => copyShiftToOtherDays(schedule)}
-                                      >
-                                        <Copy className="h-3 w-3 mr-2" />
-                                        Copy to Week
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => deleteScheduleMutation.mutate(schedule.id)}
-                                        className="text-destructive"
-                                      >
-                                        <Trash2 className="h-3 w-3 mr-2" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+              {weekDates.map((day) => (
+                <div key={day.date} className="p-1 sm:p-3 text-center bg-muted rounded">
+                  <div className="font-semibold text-xs sm:text-sm">{day.dayName}</div>
+                  <div className="text-xs text-muted-foreground">{day.dayNumber}</div>
                 </div>
               ))}
             </div>
+
+            {/* Employee Rows */}
+            {employees.map((employee) => (
+              <div key={employee.id} className="grid grid-cols-8 gap-1 sm:gap-2 mb-3">
+                {/* Employee Name Column */}
+                <div className="p-1 sm:p-3 bg-card border rounded flex items-center">
+                  <div className="font-medium truncate text-xs sm:text-sm">{employee.name}</div>
+                </div>
+
+                {/* Daily Schedule Columns */}
+                {weekDates.map((day) => {
+                  const daySchedules = getSchedulesForEmployeeAndDate(employee.id, day.date);
+                  
+                  return (
+                    <div
+                      key={`${employee.id}-${day.date}`}
+                      className="min-h-[60px] sm:min-h-[80px] p-1 sm:p-2 bg-card border rounded relative hover:bg-accent/50 transition-colors"
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, employee.id, day.date)}
+                    >
+                      {daySchedules.length === 0 ? (
+                        // Empty cell - click to add shift
+                        <button
+                          onClick={() => openShiftModal(employee.id, day.date)}
+                          className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors group"
+                        >
+                          <Plus className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
+                        </button>
+                      ) : (
+                        // Show schedules
+                        <div className="space-y-1">
+                          {daySchedules.map((schedule) => (
+                            <div
+                              key={schedule.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, schedule)}
+                              className="bg-primary/10 border border-primary/20 rounded p-1 sm:p-2 text-xs cursor-move hover:bg-primary/20 transition-colors group"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <Clock className="h-2 w-2 sm:h-3 sm:w-3 inline mr-1" />
+                                  <span className="font-medium text-xs">
+                                    <span className="hidden sm:inline">
+                                      {formatTime(schedule.time_in)} - {formatTime(schedule.time_out)}
+                                    </span>
+                                    <span className="sm:hidden">
+                                      {schedule.time_in.slice(0, 5)}-{schedule.time_out.slice(0, 5)}
+                                    </span>
+                                  </span>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-4 w-4 sm:h-6 sm:w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <MoreHorizontal className="h-2 w-2 sm:h-3 sm:w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => openShiftModal(employee.id, day.date, schedule)}
+                                    >
+                                      <Edit className="h-3 w-3 mr-2" />
+                                      Edit Shift
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => copyShiftToOtherDays(schedule)}
+                                    >
+                                      <Copy className="h-3 w-3 mr-2" />
+                                      Copy to Week
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => deleteScheduleMutation.mutate(schedule.id)}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-3 w-3 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
