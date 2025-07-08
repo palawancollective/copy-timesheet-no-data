@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, CheckCircle, Circle, User } from 'lucide-react';
+import { Clock, CheckCircle, Circle, User, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { EmployeeScheduleModal } from './EmployeeScheduleModal';
 
 interface Employee {
   id: string;
@@ -38,6 +39,7 @@ interface TimeEntry {
 export const EmployeeClockIn: React.FC = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const queryClient = useQueryClient();
 
   // Update current time every second
@@ -121,6 +123,33 @@ export const EmployeeClockIn: React.FC = () => {
       
       if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned"
       return data as TimeEntry | null;
+    },
+    enabled: !!selectedEmployeeId
+  });
+
+  // Fetch employee's weekly schedule
+  const { data: employeeSchedules = [] } = useQuery({
+    queryKey: ['employeeSchedules', selectedEmployeeId],
+    queryFn: async () => {
+      if (!selectedEmployeeId) return [];
+      
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - currentDay); // Start from Sunday
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      const { data, error } = await supabase
+        .from('weekly_schedules')
+        .select('*')
+        .eq('employee_id', selectedEmployeeId)
+        .gte('schedule_date', startOfWeek.toISOString().split('T')[0])
+        .lte('schedule_date', endOfWeek.toISOString().split('T')[0])
+        .order('schedule_date');
+      
+      if (error) throw error;
+      return data;
     },
     enabled: !!selectedEmployeeId
   });
@@ -277,6 +306,18 @@ export const EmployeeClockIn: React.FC = () => {
                 </p>
               </div>
             )}
+
+            {/* View Schedule Button */}
+            {selectedEmployee && (
+              <Button
+                onClick={() => setShowScheduleModal(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                View My Weekly Schedule
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -395,6 +436,14 @@ export const EmployeeClockIn: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Employee Schedule Modal */}
+      <EmployeeScheduleModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        employee={selectedEmployee}
+        schedules={employeeSchedules}
+      />
     </div>
   );
 };

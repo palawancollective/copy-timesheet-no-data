@@ -74,12 +74,6 @@ export const TimeTrackingApp = () => {
     setShowInvoicePasskeyModal(true);
   };
 
-  const handleScheduleButtonClick = () => {
-    // Redirect to admin panel instead of separate schedule mode
-    setIsAdminMode(true);
-    setShowScheduleMode(false);
-    setShowInvoiceMode(false);
-  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -140,15 +134,8 @@ export const TimeTrackingApp = () => {
                 Invoice
               </button>
               <button
-                onClick={handleScheduleButtonClick}
-                className={`${showScheduleMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700'} text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs`}
-              >
-                <Calendar className="h-3 w-3 mr-1" />
-                Schedule
-              </button>
-              <button
                 onClick={() => setShowPasskeyModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors text-xs"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors text-xs col-span-2"
               >
                 Admin
               </button>
@@ -171,35 +158,28 @@ export const TimeTrackingApp = () => {
               </div>
             </div>
 
-            <div className="flex space-x-3">
-              <button
-                onClick={handlePaidButtonClick}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                Paid
-              </button>
-              <button
-                onClick={handleInvoiceButtonClick}
-                className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Invoice
-              </button>
-              <button
-                onClick={handleScheduleButtonClick}
-                className={`${showScheduleMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule
-              </button>
-              <button
-                onClick={() => setShowPasskeyModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-              >
-                Admin
-              </button>
-            </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={handlePaidButtonClick}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Paid
+            </button>
+            <button
+              onClick={handleInvoiceButtonClick}
+              className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Invoice
+            </button>
+            <button
+              onClick={() => setShowPasskeyModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+            >
+              Admin
+            </button>
+          </div>
           </div>
         </div>
       </header>
