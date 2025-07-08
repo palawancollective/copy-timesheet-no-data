@@ -83,7 +83,7 @@ export const EmployeeClockIn: React.FC = () => {
     }
   });
 
-  // Fetch today's tasks for selected employee
+  // Fetch today's tasks for selected employee (show both today's and unfinished previous tasks)
   const { data: todaysTasks = [] } = useQuery({
     queryKey: ['todaysTasks', selectedEmployeeId],
     queryFn: async () => {
@@ -94,7 +94,8 @@ export const EmployeeClockIn: React.FC = () => {
         .from('employee_tasks')
         .select('*')
         .eq('employee_id', selectedEmployeeId)
-        .eq('assigned_date', today)
+        .or(`assigned_date.eq.${today},and(assigned_date.lt.${today},is_completed.eq.false)`)
+        .order('assigned_date', { ascending: false })
         .order('priority', { ascending: true });
       
       if (error) throw error;
