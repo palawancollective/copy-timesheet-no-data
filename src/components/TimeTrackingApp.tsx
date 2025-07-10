@@ -109,10 +109,13 @@ export const TimeTrackingApp = () => {
                   setShowInvoiceMode(false);
                   setShowScheduleMode(false);
                 }}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                className="hover:opacity-80 transition-opacity"
               >
-                <Clock className="h-6 w-6 text-blue-600" />
-                <h1 className="text-lg font-bold text-gray-800">Time Tracker</h1>
+                <img 
+                  src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
+                  alt="Binga Beach Logo" 
+                  className="h-8 w-auto object-contain"
+                />
               </button>
               <div className="text-right">
                 <div className="text-lg font-mono font-bold text-blue-600">
@@ -157,10 +160,13 @@ export const TimeTrackingApp = () => {
                 setShowInvoiceMode(false);
                 setShowScheduleMode(false);
               }}
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity"
             >
-              <Clock className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-800">Time Tracker</h1>
+              <img 
+                src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
+                alt="Binga Beach Logo" 
+                className="h-10 w-auto object-contain"
+              />
             </button>
             
             <div className="text-center">
