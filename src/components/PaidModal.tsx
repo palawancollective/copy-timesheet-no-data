@@ -16,6 +16,7 @@ interface PaidModalProps {
 export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [paidAmount, setPaidAmount] = useState('');
+  const [paidDate, setPaidDate] = useState(new Date().toISOString().split('T')[0]);
   const queryClient = useQueryClient();
 
   // Get Manila timezone date
@@ -45,19 +46,19 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
   });
 
   const recordPaymentMutation = useMutation({
-    mutationFn: async ({ employeeId, amount }: { employeeId: string; amount: number }) => {
+    mutationFn: async ({ employeeId, amount, paidDate }: { employeeId: string; amount: number; paidDate: string }) => {
       const employee = employees.find(emp => emp.id === employeeId);
       if (!employee) throw new Error('Employee not found');
       
-      const today = getManilaDate();
+      const customPaidAt = new Date(paidDate + 'T12:00:00').toISOString(); // Set to noon on selected date
       const now = getManilaDateTime();
       
-      // Check if there's an entry for today
+      // Check if there's an entry for the paid date
       const { data: existingEntry } = await supabase
         .from('time_entries')
         .select('*')
         .eq('employee_id', employeeId)
-        .eq('entry_date', today)
+        .eq('entry_date', paidDate)
         .single();
 
       if (existingEntry) {
@@ -67,7 +68,7 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
           .update({
             is_paid: true,
             paid_amount: amount,
-            paid_at: now,
+            paid_at: customPaidAt,
             updated_at: now
           })
           .eq('id', existingEntry.id);
@@ -79,10 +80,10 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
           .from('time_entries')
           .insert({
             employee_id: employeeId,
-            entry_date: today,
+            entry_date: paidDate,
             is_paid: true,
             paid_amount: amount,
-            paid_at: now
+            paid_at: customPaidAt
           });
         
         if (error) throw error;
@@ -103,11 +104,12 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmployeeId || !paidAmount) return;
+    if (!selectedEmployeeId || !paidAmount || !paidDate) return;
     
     recordPaymentMutation.mutate({
       employeeId: selectedEmployeeId,
-      amount: parseFloat(paidAmount)
+      amount: parseFloat(paidAmount),
+      paidDate: paidDate
     });
   };
 
@@ -156,13 +158,24 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
             />
           </div>
 
+          <div>
+            <Label htmlFor="paid-date">Paid Date</Label>
+            <Input
+              id="paid-date"
+              type="date"
+              value={paidDate}
+              onChange={(e) => setPaidDate(e.target.value)}
+              required
+            />
+          </div>
+
           {selectedEmployee && (
             <div className="bg-gray-50 p-3 rounded">
               <p className="text-sm text-gray-600">
                 Payment for: <span className="font-semibold">{selectedEmployee.name}</span>
               </p>
               <p className="text-sm text-gray-600">
-                Date: <span className="font-semibold">{new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Manila' })}</span>
+                Paid Date: <span className="font-semibold">{new Date(paidDate).toLocaleDateString('en-US')}</span>
               </p>
             </div>
           )}
@@ -177,7 +190,7 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
             </Button>
             <Button
               type="submit"
-              disabled={recordPaymentMutation.isPending || !selectedEmployeeId || !paidAmount}
+              disabled={recordPaymentMutation.isPending || !selectedEmployeeId || !paidAmount || !paidDate}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
               Record Payment
