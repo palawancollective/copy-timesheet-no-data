@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = false }) => {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [customWeekStart, setCustomWeekStart] = useState<string>('');
   const [shiftModalData, setShiftModalData] = useState<ShiftModalData>({
     employee_id: '',
     date: '',
@@ -19,7 +20,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = fa
   });
 
   const isMobile = useIsMobile();
-  const weekDates = getWeekDates();
+  const weekDates = getWeekDates(customWeekStart);
   
   const {
     employees,
@@ -27,7 +28,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = fa
     addScheduleMutation,
     updateScheduleMutation,
     deleteScheduleMutation
-  } = useScheduleData();
+  } = useScheduleData(customWeekStart);
 
   // Get today's shifts for mobile list view
   const getTodayShifts = (): TodayShift[] => {
@@ -128,6 +129,8 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = fa
           schedules={schedules}
           weekDates={weekDates}
           isAdminMode={isAdminMode}
+          customWeekStart={customWeekStart}
+          onWeekStartChange={setCustomWeekStart}
           onAddShift={openShiftModal}
           onEditShift={openShiftModal}
           onDeleteShift={handleDeleteShift}

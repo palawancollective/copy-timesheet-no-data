@@ -1,15 +1,19 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Calendar, Clock, Plus, Edit, Trash2, User } from 'lucide-react';
 import { Employee, Schedule, WeekDay } from '@/types/schedule';
-import { formatTime } from '@/lib/scheduleUtils';
+import { formatTime, getCurrentWeekStart } from '@/lib/scheduleUtils';
 
 interface DesktopScheduleViewProps {
   employees: Employee[];
   schedules: Schedule[];
   weekDates: WeekDay[];
   isAdminMode: boolean;
+  customWeekStart: string;
+  onWeekStartChange: (date: string) => void;
   onAddShift: (employeeId: string, date: string) => void;
   onEditShift: (employeeId: string, date: string, schedule?: Schedule) => void;
   onDeleteShift: (scheduleId: string) => void;
@@ -20,6 +24,8 @@ export const DesktopScheduleView: React.FC<DesktopScheduleViewProps> = ({
   schedules,
   weekDates,
   isAdminMode,
+  customWeekStart,
+  onWeekStartChange,
   onAddShift,
   onEditShift,
   onDeleteShift
@@ -38,8 +44,29 @@ export const DesktopScheduleView: React.FC<DesktopScheduleViewProps> = ({
             <Calendar className="h-5 w-5 mr-2" />
             Weekly Schedule Manager
           </div>
-          <div className="text-sm text-muted-foreground">
-            Week of {weekDates[0]?.fullDate} - {weekDates[6]?.fullDate}
+          <div className="flex items-center space-x-4">
+            {isAdminMode && (
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="week-start" className="text-sm">Start Week:</Label>
+                <Input
+                  id="week-start"
+                  type="date"
+                  value={customWeekStart || getCurrentWeekStart()}
+                  onChange={(e) => onWeekStartChange(e.target.value)}
+                  className="w-auto"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onWeekStartChange('')}
+                >
+                  Current Week
+                </Button>
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              Week of {weekDates[0]?.fullDate} - {weekDates[6]?.fullDate}
+            </div>
           </div>
         </CardTitle>
       </CardHeader>

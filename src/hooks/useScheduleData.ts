@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, Schedule } from '@/types/schedule';
-import { getCurrentWeekStart } from '@/lib/scheduleUtils';
+import { getCurrentWeekStart, getWeekStartFromDate } from '@/lib/scheduleUtils';
 import { useToast } from '@/hooks/use-toast';
 
-export const useScheduleData = () => {
+export const useScheduleData = (customWeekStart?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -24,9 +24,9 @@ export const useScheduleData = () => {
 
   // Fetch weekly schedules
   const schedulesQuery = useQuery({
-    queryKey: ['weeklySchedules'],
+    queryKey: ['weeklySchedules', customWeekStart],
     queryFn: async () => {
-      const weekStart = getCurrentWeekStart();
+      const weekStart = customWeekStart ? getWeekStartFromDate(customWeekStart) : getCurrentWeekStart();
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
       

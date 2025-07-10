@@ -16,9 +16,18 @@ export const getCurrentWeekStart = (): string => {
   return sunday.toISOString().split('T')[0];
 };
 
-// Get week dates (Sunday to Saturday)
-export const getWeekDates = (): WeekDay[] => {
-  const weekStart = getCurrentWeekStart();
+// Get week start date from any given date (finds Sunday of that week)
+export const getWeekStartFromDate = (date: string): string => {
+  const selectedDate = new Date(date);
+  const day = selectedDate.getDay();
+  const diff = selectedDate.getDate() - day;
+  const sunday = new Date(selectedDate.setDate(diff));
+  return sunday.toISOString().split('T')[0];
+};
+
+// Get week dates (Sunday to Saturday) from a specific start date
+export const getWeekDates = (customStartDate?: string): WeekDay[] => {
+  const weekStart = customStartDate ? getWeekStartFromDate(customStartDate) : getCurrentWeekStart();
   const dates = [];
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart);
