@@ -118,6 +118,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       setEditingEntry(null);
       setEditForm({});
       toast({ title: "Time entry updated successfully!" });
@@ -145,6 +146,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Time entry deleted successfully!" });
     }
   });
@@ -315,6 +317,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Employee clocked out successfully!" });
     }
   });
@@ -336,6 +339,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     onSuccess: (_, entryIds) => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       setSelectedEmployees(new Set());
       toast({ title: `Successfully clocked out ${entryIds.length} employee(s)!` });
     }
