@@ -235,7 +235,7 @@ export const RealTimeActivityTable: React.FC = () => {
                     <TableCell>
                       {activity.is_paid ? (
                         <Badge variant="default" className="text-xs">
-                          Paid ${activity.paid_amount}
+                          Paid ₱{activity.paid_amount?.toFixed(2) || '0.00'}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-xs">
