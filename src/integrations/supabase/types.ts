@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author: string
+          category: string
+          content: string
+          created_at: string
+          date: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          category?: string
+          content: string
+          created_at?: string
+          date?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          content?: string
+          created_at?: string
+          date?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employee_tasks: {
         Row: {
           assigned_date: string
