@@ -108,6 +108,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
   const startEditing = (entry: any) => {
     setEditingEntry(entry.id);
     setEditForm({
+      entry_date: entry.entry_date,
       clock_in: entry.clock_in ? new Date(entry.clock_in).toISOString().slice(0, 16) : '',
       clock_out: entry.clock_out ? new Date(entry.clock_out).toISOString().slice(0, 16) : '',
       lunch_out: entry.lunch_out ? new Date(entry.lunch_out).toISOString().slice(0, 16) : '',
@@ -121,6 +122,11 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
     if (!editingEntry) return;
 
     const updates: any = {};
+    
+    // Update entry date
+    if (editForm.entry_date) {
+      updates.entry_date = editForm.entry_date;
+    }
     
     // Convert datetime-local values to proper ISO timestamps
     if (editForm.clock_in) {
@@ -204,7 +210,18 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                 <TableCell className="font-medium">
                   {entry.employees.name}
                 </TableCell>
-                <TableCell>{entry.entry_date}</TableCell>
+                <TableCell>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={editForm.entry_date}
+                      onChange={(e) => setEditForm({...editForm, entry_date: e.target.value})}
+                      className="w-36"
+                    />
+                  ) : (
+                    entry.entry_date
+                  )}
+                </TableCell>
                 <TableCell>
                   {isEditing ? (
                     <Input
