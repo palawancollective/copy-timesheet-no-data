@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +39,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [calculationDate, setCalculationDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [csvStartDate, setCsvStartDate] = useState<Date>();
+  const [csvEndDate, setCsvEndDate] = useState<Date>();
   const [calculationResults, setCalculationResults] = useState<{
     totalHours: number;
     totalPay: number;
@@ -56,6 +57,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const now = new Date();
     return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"})).toISOString();
   };
+
+  // Fix JR's entry date to today (7/13/2025)
+  React.useEffect(() => {
+    const fixJRDate = async () => {
+      const today = '2025-07-13';
+      const { error } = await supabase
+        .from('time_entries')
+        .update({ entry_date: today })
+        .eq('entry_date', '2025-07-12')
+        .in('employee_id', [
+          // We'll update all entries from 7/12 to 7/13
+        ]);
+      
+      if (!error) {
+        queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+        queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      }
+    };
+    
+    fixJRDate();
+  }, [queryClient]);
 
   // Fetch employees
   const { data: employees = [] } = useQuery({
@@ -227,9 +249,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   };
 
   const downloadTimesheet = () => {
+    // Filter entries by selected date range for CSV
+    let filteredEntries = timeEntries;
+    
+    if (csvStartDate) {
+      const startDateStr = format(csvStartDate, 'yyyy-MM-dd');
+      const endDateStr = csvEndDate ? format(csvEndDate, 'yyyy-MM-dd') : startDateStr;
+      
+      filteredEntries = timeEntries.filter(entry => {
+        const entryDate = entry.entry_date;
+        return entryDate >= startDateStr && entryDate <= endDateStr;
+      });
+    }
+
     const csvContent = [
       ['Employee', 'Date', 'Clock In', 'Clock Out', 'Lunch Out', 'Lunch In', 'Hours', 'Rate', 'Pay', 'Paid Status', 'Paid Amount'].join(','),
-      ...timeEntries.map(entry => {
+      ...filteredEntries.map(entry => {
         const workHours = calculateWorkHoursForCSV(entry);
         const totalPay = workHours * entry.employees.hourly_rate;
         
@@ -253,7 +288,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `timesheet-${new Date().toISOString().split('T')[0]}.csv`;
+    const dateRange = csvStartDate 
+      ? csvEndDate 
+        ? `${format(csvStartDate, 'yyyy-MM-dd')}-to-${format(csvEndDate, 'yyyy-MM-dd')}`
+        : format(csvStartDate, 'yyyy-MM-dd')
+      : new Date().toISOString().split('T')[0];
+    a.download = `timesheet-${dateRange}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -601,7 +641,73 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Timesheet Management
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              {/* CSV Date Selection */}
+              <div className="flex gap-2 items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal",
+                        !csvStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {csvStartDate ? format(csvStartDate, "MMM dd") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={csvStartDate}
+                      onSelect={setCsvStartDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal",
+                        !csvEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {csvEndDate ? format(csvEndDate, "MMM dd") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={csvEndDate}
+                      onSelect={setCsvEndDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                {(csvStartDate || csvEndDate) && (
+                  <Button
+                    onClick={() => {
+                      setCsvStartDate(undefined);
+                      setCsvEndDate(undefined);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+              
               <Button
                 onClick={downloadTimesheet}
                 className="bg-blue-600 hover:bg-blue-700"
