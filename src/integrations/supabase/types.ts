@@ -112,6 +112,54 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          category: string
+          cost_per_unit: number
+          created_at: string
+          current_stock: number
+          id: string
+          is_needed: boolean
+          minimum_stock: number
+          name: string
+          needed_quantity: number | null
+          notes: string | null
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cost_per_unit?: number
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_needed?: boolean
+          minimum_stock?: number
+          name: string
+          needed_quantity?: number | null
+          notes?: string | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_per_unit?: number
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_needed?: boolean
+          minimum_stock?: number
+          name?: string
+          needed_quantity?: number | null
+          notes?: string | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           category: string
@@ -200,6 +248,7 @@ export type Database = {
           customer_whatsapp: string
           id: string
           location: string
+          messaging_platform: string
           special_requests: string | null
           status: string
           total_amount: number
@@ -211,6 +260,7 @@ export type Database = {
           customer_whatsapp: string
           id?: string
           location: string
+          messaging_platform?: string
           special_requests?: string | null
           status?: string
           total_amount: number
@@ -222,6 +272,7 @@ export type Database = {
           customer_whatsapp?: string
           id?: string
           location?: string
+          messaging_platform?: string
           special_requests?: string | null
           status?: string
           total_amount?: number
