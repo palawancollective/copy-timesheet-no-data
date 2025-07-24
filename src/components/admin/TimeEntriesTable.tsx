@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
+import { QuickClockInModal } from './QuickClockInModal';
 
 interface TimeEntriesTableProps {
   timeEntries: any[];
@@ -184,8 +185,13 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Time Entries Management</h3>
+        <QuickClockInModal />
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Employee</TableHead>
@@ -381,6 +387,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 };
