@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Clock, Plus } from 'lucide-react';
+import { Clock, Plus, CheckCircle, Circle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface QuickClockInModalProps {
@@ -33,6 +33,25 @@ export const QuickClockInModal: React.FC<QuickClockInModalProps> = ({ onSuccess 
   const [customClockIn, setCustomClockIn] = useState('09:00');
   const [customClockOut, setCustomClockOut] = useState('17:00');
   const queryClient = useQueryClient();
+
+  // Fetch tasks for selected employee
+  const { data: employeeTasks = [] } = useQuery({
+    queryKey: ['employeeTasks', selectedEmployee],
+    queryFn: async () => {
+      if (!selectedEmployee) return [];
+      
+      const { data, error } = await supabase
+        .from('employee_tasks')
+        .select('*')
+        .eq('employee_id', selectedEmployee)
+        .eq('assigned_date', selectedDate)
+        .order('priority');
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedEmployee
+  });
 
   // Fetch employees
   const { data: employees = [] } = useQuery({
@@ -240,6 +259,31 @@ export const QuickClockInModal: React.FC<QuickClockInModalProps> = ({ onSuccess 
                 const hours = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60);
                 return ` (${hours.toFixed(1)} hours)`;
               })()}
+            </div>
+          )}
+
+          {selectedEmployee && employeeTasks.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Tasks assigned for {selectedDate}:</Label>
+              <div className="max-h-32 overflow-y-auto space-y-2 p-3 bg-muted rounded-md">
+                {employeeTasks.map((task) => (
+                  <div key={task.id} className="flex items-start gap-2 text-sm">
+                    {task.is_completed ? (
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <span className={task.is_completed ? 'line-through text-muted-foreground' : ''}>
+                        {task.task_description}
+                      </span>
+                      <div className="text-xs text-muted-foreground">
+                        Priority: {task.priority}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
