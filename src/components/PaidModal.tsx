@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -14,9 +15,10 @@ interface PaidModalProps {
 }
 
 export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
-  const [paidAmount, setPaidAmount] = useState('');
-  const queryClient = useQueryClient();
+const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+const [paidAmount, setPaidAmount] = useState('');
+const [note, setNote] = useState('');
+const queryClient = useQueryClient();
 
   // Get Manila timezone date and time (real-time)
   const getManilaDate = () => {
@@ -92,27 +94,59 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
       
       return { employeeName: employee.name, amount };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['allActivities'] }); // Real-time activity table
-      toast({
-        title: "Payment Recorded ✅",
-        description: `${data.employeeName} paid ₱${data.amount.toFixed(2)} - ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true })}`
+onSuccess: async (data) => {
+  // Link a payment note to today's time entry
+  const { data: timeEntry, error: timeEntryError } = await supabase
+    .from('time_entries')
+    .select('id')
+    .eq('employee_id', selectedEmployeeId)
+    .eq('entry_date', todayDate)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!timeEntryError && timeEntry?.id) {
+    const { error: noteError } = await supabase
+      .from('payment_notes')
+      .insert({
+        time_entry_id: timeEntry.id,
+        employee_id: selectedEmployeeId,
+        note: note.trim(),
       });
-      onClose();
+
+    if (noteError) {
+      toast({
+        title: "Note not saved",
+        description: "Payment recorded but note failed to save.",
+      });
     }
+  } else {
+    toast({
+      title: "Note not saved",
+      description: "Payment recorded but the related time entry was not found.",
+    });
+  }
+
+  queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+  queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+  queryClient.invalidateQueries({ queryKey: ['allActivities'] }); // Real-time activity table
+  toast({
+    title: "Payment Recorded ✅",
+    description: `${data.employeeName} paid ₱${data.amount.toFixed(2)} - ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true })}`
+  });
+  onClose();
+}
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedEmployeeId || !paidAmount) return;
-    
-    recordPaymentMutation.mutate({
-      employeeId: selectedEmployeeId,
-      amount: parseFloat(paidAmount)
-    });
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!selectedEmployeeId || !paidAmount || !note.trim()) return;
+  
+  recordPaymentMutation.mutate({
+    employeeId: selectedEmployeeId,
+    amount: parseFloat(paidAmount)
+  });
+};
 
   const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
@@ -159,6 +193,17 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
             />
           </div>
 
+          <div>
+            <Label htmlFor="note">Payment Note</Label>
+            <Textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Describe what this payment is for"
+              required
+            />
+          </div>
+
           {selectedEmployee && (
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 mb-2">
@@ -187,7 +232,7 @@ export const PaidModal: React.FC<PaidModalProps> = ({ onClose }) => {
             </Button>
             <Button
               type="submit"
-              disabled={recordPaymentMutation.isPending || !selectedEmployeeId || !paidAmount}
+              disabled={recordPaymentMutation.isPending || !selectedEmployeeId || !paidAmount || !note.trim()}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
               {recordPaymentMutation.isPending ? 'Recording...' : 'Record Payment Now'}
