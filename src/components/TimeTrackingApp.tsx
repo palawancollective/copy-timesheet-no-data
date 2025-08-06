@@ -193,6 +193,14 @@ export const TimeTrackingApp = () => {
               <FileText className="h-4 w-4 mr-2" />
               Invoice
             </button>
+            <a
+              href="https://onlineorder.palawancollective.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+            >
+              Menu Management
+            </a>
             <button
               onClick={() => setShowPasskeyModal(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
