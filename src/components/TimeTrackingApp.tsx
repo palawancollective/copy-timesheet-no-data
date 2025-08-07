@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, DollarSign, FileText, Calendar } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
@@ -10,6 +11,7 @@ import { WeeklySchedule } from './schedule/WeeklySchedule';
 import { ThemeToggle } from './ThemeToggle';
 
 export const TimeTrackingApp = () => {
+  const { theme } = useTheme();
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPasskeyModal, setShowPasskeyModal] = useState(false);
   const [showPaidModal, setShowPaidModal] = useState(false);
@@ -108,11 +110,12 @@ export const TimeTrackingApp = () => {
                 setIsAdminMode(false);
                 setShowInvoiceMode(false);
                 setShowScheduleMode(false);
+                window.location.href = '/';
               }}
               className="hover:opacity-80 transition-opacity"
             >
               <img 
-                src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
+                src={theme === 'dark' ? '/lovable-uploads/346daa3f-e3d2-4e56-806d-cb4e9466148e.png' : '/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png'}
                 alt="Binga Beach Logo" 
                 className="h-12 md:h-16 lg:h-20 w-auto object-contain"
               />
@@ -126,7 +129,7 @@ export const TimeTrackingApp = () => {
           <div className="flex flex-col space-y-3 md:hidden">
             {/* Time Display */}
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-primary">
+              <div className="text-lg font-mono font-bold text-foreground">
                 {formatTime(currentTime)}
               </div>
               <div className="text-xs text-muted-foreground">
@@ -162,7 +165,7 @@ export const TimeTrackingApp = () => {
           {/* Desktop Layout */}
           <div className="hidden md:flex justify-between items-center">
             <div className="text-center flex-1">
-              <div className="text-3xl font-mono font-bold text-primary">
+              <div className="text-3xl font-mono font-bold text-foreground">
                 {formatTime(currentTime)}
               </div>
               <div className="text-sm text-muted-foreground">
