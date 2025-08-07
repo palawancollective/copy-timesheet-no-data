@@ -97,63 +97,10 @@ export const TimeTrackingApp = () => {
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Fixed Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-blue-500">
+      <header className="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-primary">
         <div className="w-full px-4 py-3">
-          {/* Mobile Layout */}
-          <div className="flex flex-col space-y-3 md:hidden">
-            {/* Top Row - Logo and Time */}
-            <div className="flex justify-between items-center">
-              <button 
-                onClick={() => {
-                  setIsAdminMode(false);
-                  setShowInvoiceMode(false);
-                  setShowScheduleMode(false);
-                }}
-                className="hover:opacity-80 transition-opacity"
-              >
-                <img 
-                  src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
-                  alt="Binga Beach Logo" 
-                  className="h-8 w-auto object-contain"
-                />
-              </button>
-              <div className="text-right">
-                <div className="text-lg font-mono font-bold text-blue-600">
-                  {formatTime(currentTime)}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {formatDate(currentTime)}
-                </div>
-              </div>
-            </div>
-            
-            {/* Bottom Row - Buttons */}
-            <div className="grid grid-cols-2 gap-2 w-full">
-              <button
-                onClick={handlePaidButtonClick}
-                className="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
-              >
-                <DollarSign className="h-3 w-3 mr-1" />
-                Paid
-              </button>
-              <button
-                onClick={handleInvoiceButtonClick}
-                className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs`}
-              >
-                <FileText className="h-3 w-3 mr-1" />
-                Invoice
-              </button>
-              <button
-                onClick={() => setShowPasskeyModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors text-xs col-span-2"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop Layout */}
-          <div className="hidden md:flex justify-between items-center">
+          {/* Logo - Centered at top for all devices */}
+          <div className="flex justify-center mb-3">
             <button 
               onClick={() => {
                 setIsAdminMode(false);
@@ -168,46 +115,86 @@ export const TimeTrackingApp = () => {
                 className="h-10 w-auto object-contain"
               />
             </button>
-            
+          </div>
+
+          {/* Mobile Layout */}
+          <div className="flex flex-col space-y-3 md:hidden">
+            {/* Time Display */}
             <div className="text-center">
-              <div className="text-3xl font-mono font-bold text-blue-600">
+              <div className="text-lg font-mono font-bold text-primary">
                 {formatTime(currentTime)}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs text-muted-foreground">
+                {formatDate(currentTime)}
+              </div>
+            </div>
+            
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <button
+                onClick={handlePaidButtonClick}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
+              >
+                <DollarSign className="h-3 w-3 mr-1" />
+                Paid
+              </button>
+              <button
+                onClick={handleInvoiceButtonClick}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                Invoice
+              </button>
+              <button
+                onClick={() => setShowPasskeyModal(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors text-xs col-span-2"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex justify-between items-center">
+            <div className="text-center flex-1">
+              <div className="text-3xl font-mono font-bold text-primary">
+                {formatTime(currentTime)}
+              </div>
+              <div className="text-sm text-muted-foreground">
                 {formatDate(currentTime)}
               </div>
             </div>
 
-          <div className="flex space-x-3">
-            <button
-              onClick={handlePaidButtonClick}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
-            >
-              <DollarSign className="h-4 w-4 mr-2" />
-              Paid
-            </button>
-            <button
-              onClick={handleInvoiceButtonClick}
-              className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Invoice
-            </button>
-            <a
-              href="https://onlineorder.palawancollective.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
-            >
-              Menu Management
-            </a>
-            <button
-              onClick={() => setShowPasskeyModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-            >
-              Admin
-            </button>
-          </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={handlePaidButtonClick}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Paid
+              </button>
+              <button
+                onClick={handleInvoiceButtonClick}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Invoice
+              </button>
+              <a
+                href="https://onlineorder.palawancollective.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+              >
+                Menu Management
+              </a>
+              <button
+                onClick={() => setShowPasskeyModal(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Admin
+              </button>
+            </div>
           </div>
         </div>
       </header>
