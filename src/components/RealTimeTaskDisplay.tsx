@@ -163,18 +163,6 @@ export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoH
         </CardContent>
       </Card>
 
-      {/* Home Button */}
-      {onGoHome && (
-        <div className="flex justify-center">
-          <Button 
-            onClick={onGoHome}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 animate-fade-in hover-scale"
-          >
-            <Home className="h-5 w-5 mr-2" />
-            Back to Employee Clock-In
-          </Button>
-        </div>
-      )}
 
       {/* Employee Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
