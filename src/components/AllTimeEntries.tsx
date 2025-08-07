@@ -3,6 +3,8 @@ import React, { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { getWorkStatusBadgeVariant, getPaidStatusBadgeVariant, getWorkHoursTextColor } from '@/lib/statusUtils';
 
 interface TimeEntry {
   id: string;
@@ -109,57 +111,46 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
     const workStatus = getWorkStatus(entry);
     
     return (
-      <div className="bg-gray-50 rounded-lg p-4 mb-4 border">
+      <div className="bg-card rounded-lg p-4 mb-4 border">
         <div className="flex justify-between items-start mb-3">
           <div>
-            <h3 className="font-semibold text-gray-800">{entry.employees.name}</h3>
-            <p className="text-sm text-gray-600">{formatDate(entry.entry_date)}</p>
+            <h3 className="font-semibold text-card-foreground">{entry.employees.name}</h3>
+            <p className="text-sm text-muted-foreground">{formatDate(entry.entry_date)}</p>
           </div>
           <div className="text-right">
-            <div className={`text-lg font-mono font-semibold ${
-              workStatus === 'Working' || workStatus === 'On lunch' ? 'text-blue-600' : 'text-gray-800'
-            }`}>
+            <div className={`text-lg font-mono font-semibold ${getWorkHoursTextColor(workStatus)}`}>
               {workHours.toFixed(2)}h
             </div>
-            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              workStatus === 'Working' ? 'bg-blue-100 text-blue-800' :
-              workStatus === 'On lunch' ? 'bg-orange-100 text-orange-800' :
-              workStatus === 'Finished' ? 'bg-gray-100 text-gray-800' :
-              'bg-red-100 text-red-800'
-            }`}>
+            <Badge variant={getWorkStatusBadgeVariant(workStatus)}>
               {workStatus}
-            </span>
+            </Badge>
           </div>
         </div>
         
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-gray-500">Clock In:</span>
-            <div className="font-medium">{formatTime(entry.clock_in)}</div>
+            <span className="text-muted-foreground">Clock In:</span>
+            <div className="font-medium text-foreground">{formatTime(entry.clock_in)}</div>
           </div>
           <div>
-            <span className="text-gray-500">Clock Out:</span>
-            <div className="font-medium">{formatTime(entry.clock_out)}</div>
+            <span className="text-muted-foreground">Clock Out:</span>
+            <div className="font-medium text-foreground">{formatTime(entry.clock_out)}</div>
           </div>
           <div>
-            <span className="text-gray-500">Lunch Out:</span>
-            <div className="font-medium">{formatTime(entry.lunch_out)}</div>
+            <span className="text-muted-foreground">Lunch Out:</span>
+            <div className="font-medium text-foreground">{formatTime(entry.lunch_out)}</div>
           </div>
           <div>
-            <span className="text-gray-500">Lunch In:</span>
-            <div className="font-medium">{formatTime(entry.lunch_in)}</div>
+            <span className="text-muted-foreground">Lunch In:</span>
+            <div className="font-medium text-foreground">{formatTime(entry.lunch_in)}</div>
           </div>
         </div>
         
         <div className="flex justify-between items-center mt-3 pt-3 border-t">
-          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-            entry.is_paid 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-yellow-100 text-yellow-800'
-          }`}>
+          <Badge variant={getPaidStatusBadgeVariant(entry.is_paid)}>
             {entry.is_paid ? 'Paid' : 'Unpaid'}
-          </span>
-          <div className="text-sm font-medium">
+          </Badge>
+          <div className="text-sm font-medium text-foreground">
             {entry.paid_amount ? `₱${entry.paid_amount.toFixed(2)}` : '-'}
           </div>
         </div>
@@ -168,11 +159,11 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 md:p-6 w-full">
-      <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-4">All Time Entries (Real-time)</h2>
+    <div className="bg-card rounded-lg shadow-md p-4 md:p-6 w-full">
+      <h2 className="text-lg md:text-xl font-bold text-card-foreground mb-4">All Time Entries (Real-time)</h2>
       
       {entries.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No time entries found</p>
+        <p className="text-muted-foreground text-center py-8">No time entries found</p>
       ) : (
         <>
           {/* Mobile View */}
@@ -190,16 +181,16 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="sticky top-0 bg-white">Employee</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Date</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Clock In</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Lunch Out</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Lunch In</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Clock Out</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Hours</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Status</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Work Status</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Paid Amount</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Employee</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Clock In</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Lunch Out</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Lunch In</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Clock Out</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Hours</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Status</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Work Status</TableHead>
+                    <TableHead className="sticky top-0 bg-card">Paid Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -218,28 +209,19 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
                         <TableCell>{formatTime(entry.lunch_in)}</TableCell>
                         <TableCell>{formatTime(entry.clock_out)}</TableCell>
                         <TableCell className="font-mono">
-                          <span className={workStatus === 'Working' || workStatus === 'On lunch' ? 'text-blue-600 font-semibold' : ''}>
+                          <span className={getWorkHoursTextColor(workStatus)}>
                             {workHours.toFixed(2)}h
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            entry.is_paid 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                          <Badge variant={getPaidStatusBadgeVariant(entry.is_paid)}>
                             {entry.is_paid ? 'Paid' : 'Unpaid'}
-                          </span>
+                          </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            workStatus === 'Working' ? 'bg-blue-100 text-blue-800' :
-                            workStatus === 'On lunch' ? 'bg-orange-100 text-orange-800' :
-                            workStatus === 'Finished' ? 'bg-gray-100 text-gray-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
+                          <Badge variant={getWorkStatusBadgeVariant(workStatus)}>
                             {workStatus}
-                          </span>
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           {entry.paid_amount ? `₱${entry.paid_amount.toFixed(2)}` : '-'}

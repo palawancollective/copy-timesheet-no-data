@@ -390,7 +390,8 @@ export const EmployeeClockIn: React.FC = () => {
               <Button
                 onClick={handleClockIn}
                 disabled={clockInMutation.isPending}
-                className="bg-green-600 hover:bg-green-700 text-lg px-8 py-3"
+                variant="success"
+                className="text-lg px-8 py-3"
               >
                 Clock In Now
               </Button>
@@ -401,7 +402,7 @@ export const EmployeeClockIn: React.FC = () => {
                 <Badge variant="default" className="text-lg px-4 py-2">
                   ✅ Already Clocked In Today
                 </Badge>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Clocked in at: {new Date(todaysTimeEntry.clock_in!).toLocaleString('en-US', {
                     timeZone: 'Asia/Manila',
                     hour: '2-digit',
@@ -416,7 +417,7 @@ export const EmployeeClockIn: React.FC = () => {
                     <Button
                       onClick={handleLunchOut}
                       disabled={lunchOutMutation.isPending}
-                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                      variant="warning"
                     >
                       Lunch Out
                     </Button>

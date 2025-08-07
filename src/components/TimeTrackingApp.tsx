@@ -7,6 +7,7 @@ import { PasskeyModal } from './PasskeyModal';
 import { PaidModal } from './PaidModal';
 import { InvoiceGenerator } from './InvoiceGenerator';
 import { WeeklySchedule } from './schedule/WeeklySchedule';
+import { ThemeToggle } from './ThemeToggle';
 
 export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -95,12 +96,13 @@ export const TimeTrackingApp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-app-gradient-from to-app-gradient-to">
       {/* Fixed Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-primary">
+      <header className="sticky top-0 z-50 bg-card shadow-lg border-b-4 border-primary">
         <div className="w-full px-4 py-3">
           {/* Logo - Centered at top for all devices */}
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex-1" />
             <button 
               onClick={() => {
                 setIsAdminMode(false);
@@ -115,6 +117,9 @@ export const TimeTrackingApp = () => {
                 className="h-12 md:h-16 lg:h-20 w-auto object-contain"
               />
             </button>
+            <div className="flex-1 flex justify-end">
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Mobile Layout */}
