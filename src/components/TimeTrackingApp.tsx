@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, DollarSign, FileText, Calendar, Sun, Moon } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
+import { Clock, DollarSign, FileText, Calendar } from 'lucide-react';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
@@ -11,7 +9,6 @@ import { InvoiceGenerator } from './InvoiceGenerator';
 import { WeeklySchedule } from './schedule/WeeklySchedule';
 
 export const TimeTrackingApp = () => {
-  const { theme, setTheme } = useTheme();
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPasskeyModal, setShowPasskeyModal] = useState(false);
   const [showPaidModal, setShowPaidModal] = useState(false);
@@ -98,12 +95,65 @@ export const TimeTrackingApp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-background">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Fixed Header */}
-      <header className="sticky top-0 z-50 bg-card shadow-lg border-b-4 border-primary">
+      <header className="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-blue-500">
         <div className="w-full px-4 py-3">
-          {/* Logo - Top Center for All Devices */}
-          <div className="flex justify-center mb-4">
+          {/* Mobile Layout */}
+          <div className="flex flex-col space-y-3 md:hidden">
+            {/* Top Row - Logo and Time */}
+            <div className="flex justify-between items-center">
+              <button 
+                onClick={() => {
+                  setIsAdminMode(false);
+                  setShowInvoiceMode(false);
+                  setShowScheduleMode(false);
+                }}
+                className="hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
+                  alt="Binga Beach Logo" 
+                  className="h-8 w-auto object-contain"
+                />
+              </button>
+              <div className="text-right">
+                <div className="text-lg font-mono font-bold text-blue-600">
+                  {formatTime(currentTime)}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {formatDate(currentTime)}
+                </div>
+              </div>
+            </div>
+            
+            {/* Bottom Row - Buttons */}
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <button
+                onClick={handlePaidButtonClick}
+                className="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
+              >
+                <DollarSign className="h-3 w-3 mr-1" />
+                Paid
+              </button>
+              <button
+                onClick={handleInvoiceButtonClick}
+                className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs`}
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                Invoice
+              </button>
+              <button
+                onClick={() => setShowPasskeyModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-lg font-semibold transition-colors text-xs col-span-2"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex justify-between items-center">
             <button 
               onClick={() => {
                 setIsAdminMode(false);
@@ -115,111 +165,49 @@ export const TimeTrackingApp = () => {
               <img 
                 src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
                 alt="Binga Beach Logo" 
-                className="h-12 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
             </button>
-          </div>
-
-          {/* Mobile Layout */}
-          <div className="flex flex-col space-y-3 md:hidden">
-            {/* Top Row - Time and Theme Toggle */}
-            <div className="flex justify-between items-center">
-              <div className="text-left">
-                <div className="text-lg font-mono font-bold text-primary">
-                  {formatTime(currentTime)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {formatDate(currentTime)}
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                className="h-8 w-8"
-              >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </div>
             
-            {/* Bottom Row - Buttons */}
-            <div className="grid grid-cols-2 gap-2 w-full">
-              <Button
-                onClick={handlePaidButtonClick}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
-              >
-                <DollarSign className="h-3 w-3 mr-1" />
-                Paid
-              </Button>
-              <Button
-                onClick={handleInvoiceButtonClick}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
-              >
-                <FileText className="h-3 w-3 mr-1" />
-                Invoice
-              </Button>
-              <Button
-                onClick={() => setShowPasskeyModal(true)}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors text-xs col-span-2"
-              >
-                Admin
-              </Button>
-            </div>
-          </div>
-
-          {/* Desktop Layout */}
-          <div className="hidden md:flex justify-between items-center">
-            <div className="text-left">
-              <div className="text-3xl font-mono font-bold text-primary">
+            <div className="text-center">
+              <div className="text-3xl font-mono font-bold text-blue-600">
                 {formatTime(currentTime)}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-600">
                 {formatDate(currentTime)}
               </div>
             </div>
 
-            <div className="flex space-x-3 items-center">
-              <Button
-                onClick={handlePaidButtonClick}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                Paid
-              </Button>
-              <Button
-                onClick={handleInvoiceButtonClick}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Invoice
-              </Button>
-              <a
-                href="https://onlineorder.palawancollective.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
-              >
-                Menu Management
-              </a>
-              <Button
-                onClick={() => setShowPasskeyModal(true)}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-semibold transition-colors"
-              >
-                Admin
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                className="ml-2"
-              >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={handlePaidButtonClick}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Paid
+            </button>
+            <button
+              onClick={handleInvoiceButtonClick}
+              className={`${showInvoiceMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center`}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Invoice
+            </button>
+            <a
+              href="https://onlineorder.palawancollective.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center"
+            >
+              Menu Management
+            </a>
+            <button
+              onClick={() => setShowPasskeyModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+            >
+              Admin
+            </button>
+          </div>
           </div>
         </div>
       </header>
