@@ -175,6 +175,9 @@ export const EmployeeClockIn: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Successfully clocked in!" });
     }
   });
@@ -195,6 +198,9 @@ export const EmployeeClockIn: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Successfully clocked out!" });
     }
   });
@@ -215,6 +221,9 @@ export const EmployeeClockIn: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Lunch out recorded!" });
     }
   });
@@ -235,6 +244,9 @@ export const EmployeeClockIn: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Lunch in recorded!" });
     }
   });
@@ -262,12 +274,12 @@ export const EmployeeClockIn: React.FC = () => {
     }
   });
 
-  // Set up real-time subscription for task updates
+  // Set up real-time subscription for task updates and time entries
   useEffect(() => {
     if (!selectedEmployeeId) return;
 
     const channel = supabase
-      .channel('task-updates')
+      .channel('clock-in-updates')
       .on(
         'postgres_changes',
         {
@@ -279,6 +291,21 @@ export const EmployeeClockIn: React.FC = () => {
         () => {
           queryClient.invalidateQueries({ queryKey: ['todaysTasks', selectedEmployeeId] });
           queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'time_entries',
+          filter: `employee_id=eq.${selectedEmployeeId}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
+          queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+          queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+          queryClient.invalidateQueries({ queryKey: ['allActivities'] });
         }
       )
       .subscribe();

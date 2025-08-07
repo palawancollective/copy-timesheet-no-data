@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,30 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const queryClient = useQueryClient();
+
+  // Set up real-time subscription for time entries
+  useEffect(() => {
+    const channel = supabase
+      .channel('timesheet-management')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'time_entries'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+          queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+          queryClient.invalidateQueries({ queryKey: ['allActivities'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Get Manila timezone helpers
   const getManilaDateTime = () => {

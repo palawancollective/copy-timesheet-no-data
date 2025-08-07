@@ -85,6 +85,7 @@ export const QuickClockInModal: React.FC<QuickClockInModalProps> = ({ onSuccess 
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
       queryClient.invalidateQueries({ queryKey: ['allActivities'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry'] });
       toast({ title: "Employee clocked in successfully!" });
       setIsOpen(false);
       resetForm();
