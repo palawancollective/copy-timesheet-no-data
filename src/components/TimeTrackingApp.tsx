@@ -112,7 +112,7 @@ export const TimeTrackingApp = () => {
               <img 
                 src="/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png" 
                 alt="Binga Beach Logo" 
-                className="h-10 w-auto object-contain"
+                className="h-12 md:h-16 lg:h-20 w-auto object-contain"
               />
             </button>
           </div>
