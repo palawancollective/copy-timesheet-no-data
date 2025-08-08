@@ -874,6 +874,10 @@ export type Database = {
       }
     }
     Functions: {
+      delete_employee_and_related: {
+        Args: { p_employee_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean

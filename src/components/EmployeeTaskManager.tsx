@@ -158,6 +158,27 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
     }
   });
 
+  // Delete employee & all related data (tasks, schedules, time entries, payment notes)
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('delete_employee_and_related', {
+        p_employee_id: employee.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      // Refresh lists everywhere
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employeeTasks', employee.id] });
+      queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      toast({ title: 'Employee and all related data deleted.' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Failed to delete employee', description: err?.message, variant: 'destructive' });
+    }
+  });
+
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskDescription.trim()) return;
@@ -222,10 +243,36 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
       
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Task Management - {employee.name}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Task Management - {employee.name}
+            </DialogTitle>
+            {isAdminMode && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="text-red-600 hover:text-red-700">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Employee
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {employee.name} and all data?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently deletes this employee and all time entries, tasks, schedules, and payment notes. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => deleteEmployeeMutation.mutate()} className="bg-red-600 hover:bg-red-700">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
