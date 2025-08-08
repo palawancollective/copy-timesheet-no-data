@@ -482,7 +482,7 @@ export const EmployeeClockIn: React.FC = () => {
                 {completedTasks}/{totalTasks} Completed
               </Badge>
             </CardTitle>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Please mark each task as completed and record the completion time.
             </p>
           </CardHeader>
@@ -491,11 +491,11 @@ export const EmployeeClockIn: React.FC = () => {
             <div className="block md:hidden">
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {todaysTasks.map((task, index) => (
-                  <div key={task.id} className={`bg-gray-50 rounded-lg p-3 border ${task.is_completed ? 'bg-green-50' : ''}`}>
+                  <div key={task.id} className={`rounded-lg p-3 border ${task.is_completed ? 'bg-success/10 border-success/30' : 'bg-muted'}`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 pr-2">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
+                          <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -503,20 +503,20 @@ export const EmployeeClockIn: React.FC = () => {
                             className="p-1 h-6"
                           >
                             {task.is_completed ? (
-                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <CheckCircle className="h-5 w-5 text-success" />
                             ) : (
-                              <Circle className="h-5 w-5 text-gray-400" />
+                              <Circle className="h-5 w-5 text-muted-foreground" />
                             )}
                           </Button>
                         </div>
                         <div className="text-sm">
-                          <span className={task.is_completed ? 'line-through text-gray-500' : 'text-gray-800'}>
+                          <span className={task.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}>
                             {task.task_description}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
                       {task.completed_at ? `Completed: ${formatCompletionTime(task.completed_at)}` : 'Not completed yet'}
                     </div>
                   </div>
@@ -537,9 +537,9 @@ export const EmployeeClockIn: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {todaysTasks.map((task, index) => (
-                    <TableRow key={task.id} className={task.is_completed ? 'bg-green-50' : ''}>
+                    <TableRow key={task.id} className={task.is_completed ? 'bg-success/10' : ''}>
                       <TableCell className="font-medium">{index + 1}</TableCell>
-                      <TableCell className={task.is_completed ? 'line-through text-gray-500' : ''}>
+                      <TableCell className={task.is_completed ? 'line-through text-muted-foreground' : ''}>
                         {task.task_description}
                       </TableCell>
                       <TableCell className="text-center">
@@ -550,9 +550,9 @@ export const EmployeeClockIn: React.FC = () => {
                           className="p-1"
                         >
                           {task.is_completed ? (
-                            <CheckCircle className="h-6 w-6 text-green-600" />
+                            <CheckCircle className="h-6 w-6 text-success" />
                           ) : (
-                            <Circle className="h-6 w-6 text-gray-400" />
+                            <Circle className="h-6 w-6 text-muted-foreground" />
                           )}
                         </Button>
                       </TableCell>
@@ -566,20 +566,20 @@ export const EmployeeClockIn: React.FC = () => {
             </div>
             
             {totalTasks === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No tasks assigned for today
               </div>
             )}
             
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-6 p-4 bg-accent rounded-lg">
               <h4 className="font-semibold mb-2">Instructions:</h4>
-              <ul className="text-sm space-y-1 text-gray-700">
+              <ul className="text-sm space-y-1 text-muted-foreground">
                 <li>• Click the circle (○) when you complete a task - it will turn into a checkmark (✅)</li>
                 <li>• The completion time will be automatically recorded</li>
                 <li>• Ensure all tasks are completed before the end of your shift</li>
                 <li>• Contact your supervisor if you need help with any task</li>
               </ul>
-              <p className="text-sm font-medium text-blue-700 mt-3">
+              <p className="text-sm font-medium text-info mt-3">
                 Have a productive day! 🌟
               </p>
             </div>
