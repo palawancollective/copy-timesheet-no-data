@@ -374,16 +374,25 @@ export const EmployeeClockIn: React.FC = () => {
                   <SelectValue placeholder="Select Employee" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        {employee.name}
-                      </div>
+                  {employees.length === 0 ? (
+                    <SelectItem value="__none" disabled>
+                      No employees found
                     </SelectItem>
-                  ))}
+                  ) : (
+                    employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2" />
+                          {employee.name}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
+              {employees.length === 0 && (
+                <p className="mt-2 text-xs text-muted-foreground">No employees yet. Go to Admin → Add Employee to create one.</p>
+              )}
             </div>
             
             {selectedEmployee && !todaysTimeEntry && (

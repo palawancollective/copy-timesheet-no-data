@@ -193,13 +193,22 @@ export const QuickClockInModal: React.FC<QuickClockInModalProps> = ({ onSuccess 
                 <SelectValue placeholder="Select Employee" />
               </SelectTrigger>
               <SelectContent>
-                {employees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {employee.name}
+                {employees.length === 0 ? (
+                  <SelectItem value="__none" disabled>
+                    No employees found
                   </SelectItem>
-                ))}
+                ) : (
+                  employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
+            {employees.length === 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">No employees yet. Open Admin → Add Employee to create one.</p>
+            )}
           </div>
 
           <div>
