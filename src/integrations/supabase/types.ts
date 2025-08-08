@@ -429,6 +429,7 @@ export type Database = {
           description: string | null
           food_cost: number
           id: string
+          image_url: string | null
           inventory_amount: number
           is_available: boolean
           name: string
@@ -441,6 +442,7 @@ export type Database = {
           description?: string | null
           food_cost?: number
           id?: string
+          image_url?: string | null
           inventory_amount?: number
           is_available?: boolean
           name: string
@@ -453,6 +455,7 @@ export type Database = {
           description?: string | null
           food_cost?: number
           id?: string
+          image_url?: string | null
           inventory_amount?: number
           is_available?: boolean
           name?: string
@@ -495,6 +498,13 @@ export type Database = {
             columns: ["menu_item_id"]
             isOneToOne: false
             referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "financial_tracker_orders"
             referencedColumns: ["id"]
           },
           {
@@ -762,6 +772,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_schedules: {
         Row: {
           created_at: string
@@ -802,13 +830,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      financial_tracker_orders: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          customer_name: string | null
+          customer_whatsapp: string | null
+          id: string | null
+          location: string | null
+          messaging_platform: string | null
+          notes: string | null
+          status: string | null
+          transaction_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_whatsapp?: string | null
+          id?: string | null
+          location?: string | null
+          messaging_platform?: string | null
+          notes?: string | null
+          status?: string | null
+          transaction_date?: never
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_whatsapp?: string | null
+          id?: string | null
+          location?: string | null
+          messaging_platform?: string | null
+          notes?: string | null
+          status?: string | null
+          transaction_date?: never
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "manager" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -935,6 +1007,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["manager", "user"],
+    },
   },
 } as const
