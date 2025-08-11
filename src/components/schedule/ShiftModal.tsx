@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Employee, ShiftModalData } from '@/types/schedule';
 import { SHIFT_PRESETS } from '@/lib/scheduleUtils';
@@ -56,6 +57,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
             {shiftData.schedule_id ? 'Edit Shift' : 'Add New Shift'}
           </DialogTitle>
         </DialogHeader>
+        <DialogDescription className="sr-only">Set employee, date, time in and time out for the shift.</DialogDescription>
         <div className="space-y-4">
           <div>
             <Label>Employee</Label>
