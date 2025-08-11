@@ -102,14 +102,15 @@ export const DesktopScheduleView: React.FC<DesktopScheduleViewProps> = ({
                     className="min-h-[80px] p-2 bg-card border rounded relative hover:bg-accent/50 transition-all duration-200"
                   >
                     {daySchedules.length === 0 ? (
-                      isAdminMode && (
-                        <button
-                          onClick={() => onAddShift(employee.id, day.date)}
-                          className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors group"
-                        >
-                          <Plus className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                        </button>
-                      )
+                      <button
+                        type="button"
+                        onClick={() => isAdminMode ? onAddShift(employee.id, day.date) : undefined}
+                        className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors group"
+                        aria-label={isAdminMode ? "Add shift" : "Select time slot"}
+                        title={isAdminMode ? "Add shift" : "Select time slot"}
+                      >
+                        <Plus className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                      </button>
                     ) : (
                       <div className="space-y-1">
                         {daySchedules.map((schedule) => (
