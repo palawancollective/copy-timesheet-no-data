@@ -397,6 +397,7 @@ export const EmployeeClockIn: React.FC = () => {
             
             {selectedEmployee && !todaysTimeEntry && (
               <Button
+                type="button"
                 onClick={handleClockIn}
                 disabled={clockInMutation.isPending}
                 variant="success"
@@ -424,6 +425,7 @@ export const EmployeeClockIn: React.FC = () => {
                 <div className="flex flex-col gap-3">
                   {!todaysTimeEntry.lunch_out && (
                     <Button
+                      type="button"
                       onClick={handleLunchOut}
                       disabled={lunchOutMutation.isPending}
                       variant="warning"
@@ -434,6 +436,7 @@ export const EmployeeClockIn: React.FC = () => {
                   
                   {todaysTimeEntry.lunch_out && !todaysTimeEntry.lunch_in && (
                     <Button
+                      type="button"
                       onClick={handleLunchIn}
                       disabled={lunchInMutation.isPending}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -444,6 +447,7 @@ export const EmployeeClockIn: React.FC = () => {
                   
                   {!todaysTimeEntry.clock_out && (
                     <Button
+                      type="button"
                       onClick={handleClockOut}
                       disabled={clockOutMutation.isPending}
                       className="bg-red-600 hover:bg-red-700 text-white"
@@ -469,6 +473,7 @@ export const EmployeeClockIn: React.FC = () => {
             {/* View Schedule Button */}
             {selectedEmployee && (
               <Button
+                type="button"
                 onClick={() => setShowScheduleModal(true)}
                 variant="outline"
                 className="flex items-center gap-2"

@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -422,6 +422,53 @@ export type Database = {
         }
         Relationships: []
       }
+      investors: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          investment_amount_usd: number
+          name: string
+          nationality: string
+          percentage: number
+          unit_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          investment_amount_usd?: number
+          name: string
+          nationality: string
+          percentage: number
+          unit_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          investment_amount_usd?: number
+          name?: string
+          nationality?: string
+          percentage?: number
+          unit_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investors_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           category: string
@@ -627,6 +674,39 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean
+          kyc_verified: boolean
+          nationality: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          is_admin?: boolean
+          kyc_verified?: boolean
+          nationality?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean
+          kyc_verified?: boolean
+          nationality?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profit_goals: {
         Row: {
           created_at: string
@@ -745,29 +825,124 @@ export type Database = {
           },
         ]
       }
-      units: {
+      token_pools: {
         Row: {
           created_at: string
-          description: string | null
           id: string
-          is_active: boolean
-          name: string
+          pool_type: string
+          sold_tokens: number
+          total_tokens: number
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
           id?: string
-          is_active?: boolean
-          name: string
+          pool_type: string
+          sold_tokens?: number
+          total_tokens: number
           updated_at?: string
         }
         Update: {
           created_at?: string
+          id?: string
+          pool_type?: string
+          sold_tokens?: number
+          total_tokens?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string | null
+          reference_code: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          reference_code?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          reference_code?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          available_securities: number
+          created_at: string
+          description: string | null
+          funded_percentage: number
+          id: string
+          is_active: boolean
+          name: string
+          ownership_type: string
+          security_price_usd: number
+          status: string
+          total_securities: number
+          unit_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          available_securities?: number
+          created_at?: string
           description?: string | null
+          funded_percentage?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          ownership_type?: string
+          security_price_usd?: number
+          status?: string
+          total_securities?: number
+          unit_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          available_securities?: number
+          created_at?: string
+          description?: string | null
+          funded_percentage?: number
           id?: string
           is_active?: boolean
           name?: string
+          ownership_type?: string
+          security_price_usd?: number
+          status?: string
+          total_securities?: number
+          unit_type?: string | null
           updated_at?: string
         }
         Relationships: []
