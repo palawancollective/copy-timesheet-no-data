@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, Schedule } from '@/types/schedule';
 import { getCurrentWeekStart, getWeekStartFromDate } from '@/lib/scheduleUtils';
@@ -41,56 +42,136 @@ export const useScheduleData = (customWeekStart?: string) => {
         .order('schedule_date')
         .order('time_in');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching schedules:', error);
+        throw error;
+      }
       return data as Schedule[];
-    },
-    refetchInterval: 3000 // Real-time updates every 3 seconds
+    }
   });
+
+  // Real-time subscriptions for immediate updates
+  useEffect(() => {
+    const employeeChannel = supabase
+      .channel('employees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employees'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['employees'] });
+        }
+      )
+      .subscribe();
+
+    const scheduleChannel = supabase
+      .channel('schedules-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'weekly_schedules'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(employeeChannel);
+      supabase.removeChannel(scheduleChannel);
+    };
+  }, [queryClient]);
 
   // Add schedule mutation
   const addScheduleMutation = useMutation({
     mutationFn: async (scheduleData: any) => {
-      const { error } = await supabase
+      console.log('Adding schedule:', scheduleData);
+      const { data, error } = await supabase
         .from('weekly_schedules')
-        .insert(scheduleData);
+        .insert(scheduleData)
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding schedule:', error);
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
       toast({ title: "Schedule added successfully!" });
+    },
+    onError: (error: any) => {
+      console.error('Mutation error:', error);
+      toast({ 
+        title: "Failed to add schedule", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
     }
   });
 
   // Update schedule mutation
   const updateScheduleMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const { error } = await supabase
+      console.log('Updating schedule:', id, updates);
+      const { data, error } = await supabase
         .from('weekly_schedules')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating schedule:', error);
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
       toast({ title: "Schedule updated successfully!" });
+    },
+    onError: (error: any) => {
+      console.error('Update mutation error:', error);
+      toast({ 
+        title: "Failed to update schedule", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
     }
   });
 
   // Delete schedule mutation
   const deleteScheduleMutation = useMutation({
     mutationFn: async (id: string) => {
+      console.log('Deleting schedule:', id);
       const { error } = await supabase
         .from('weekly_schedules')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting schedule:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] });
       toast({ title: "Schedule deleted successfully!" });
+    },
+    onError: (error: any) => {
+      console.error('Delete mutation error:', error);
+      toast({ 
+        title: "Failed to delete schedule", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
     }
   });
 
