@@ -56,86 +56,33 @@ const queryClient = useQueryClient();
       
       const now = getManilaDateTime();
       
-      // Check if there's an entry for today
-      const { data: existingEntry } = await supabase
-        .from('time_entries')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .eq('entry_date', todayDate)
-        .single();
-
-      if (existingEntry) {
-        // Update existing entry
-        const { error } = await supabase
-          .from('time_entries')
-          .update({
-            is_paid: true,
-            paid_amount: amount,
-            paid_at: now,
-            updated_at: now
-          })
-          .eq('id', existingEntry.id);
-        
-        if (error) throw error;
-      } else {
-        // Create new entry with payment for today
-        const { error } = await supabase
-          .from('time_entries')
-          .insert({
-            employee_id: employeeId,
-            entry_date: todayDate,
-            is_paid: true,
-            paid_amount: amount,
-            paid_at: now
-          });
-        
-        if (error) throw error;
-      }
+      // Record payment in separate payments table
+      const { error } = await supabase
+        .from('payments')
+        .insert({
+          employee_id: employeeId,
+          amount: amount,
+          payment_date: todayDate,
+          paid_at: now,
+          note: note.trim()
+        });
+      
+      if (error) throw error;
       
       return { employeeName: employee.name, amount };
     },
-onSuccess: async (data) => {
-  // Link a payment note to today's time entry
-  const { data: timeEntry, error: timeEntryError } = await supabase
-    .from('time_entries')
-    .select('id')
-    .eq('employee_id', selectedEmployeeId)
-    .eq('entry_date', todayDate)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (!timeEntryError && timeEntry?.id) {
-    const { error: noteError } = await supabase
-      .from('payment_notes')
-      .insert({
-        time_entry_id: timeEntry.id,
-        employee_id: selectedEmployeeId,
-        note: note.trim(),
-      });
-
-    if (noteError) {
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      
       toast({
-        title: "Note not saved",
-        description: "Payment recorded but note failed to save.",
+        title: "Payment Recorded ✅",
+        description: `${data.employeeName} paid ₱${data.amount.toFixed(2)} - ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true })}`
       });
+      onClose();
     }
-  } else {
-    toast({
-      title: "Note not saved",
-      description: "Payment recorded but the related time entry was not found.",
-    });
-  }
-
-  queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
-  queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-  queryClient.invalidateQueries({ queryKey: ['allActivities'] }); // Real-time activity table
-  toast({
-    title: "Payment Recorded ✅",
-    description: `${data.employeeName} paid ₱${data.amount.toFixed(2)} - ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true })}`
-  });
-  onClose();
-}
   });
 
 const handleSubmit = (e: React.FormEvent) => {
