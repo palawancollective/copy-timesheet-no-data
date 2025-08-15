@@ -11,6 +11,7 @@ import { BulkClockOut } from './admin/BulkClockOut';
 import { TimesheetDownload } from './admin/TimesheetDownload';
 import { HoursCalculator } from './admin/HoursCalculator';
 import { TimeEntriesTable } from './admin/TimeEntriesTable';
+import { PaymentsList } from './PaymentsList';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -184,6 +185,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
           />
         </CardContent>
       </Card>
+
+      {/* All Employee Payments */}
+      <PaymentsList showEmployeeName={true} />
     </div>
   );
 };

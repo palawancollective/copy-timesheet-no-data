@@ -9,6 +9,7 @@ import { AllTimeEntries } from './AllTimeEntries';
 import { EmployeeClockIn } from './EmployeeClockIn';
 import { RealTimeTaskDisplay } from './RealTimeTaskDisplay';
 import { RealTimeActivityTable } from './RealTimeActivityTable';
+import { PaymentsList } from './PaymentsList';
 import { toast } from '@/hooks/use-toast';
 
 export const MainDisplay = ({ isAdminMode = false }: { isAdminMode?: boolean }) => {
@@ -202,6 +203,7 @@ export const MainDisplay = ({ isAdminMode = false }: { isAdminMode?: boolean }) 
         <TabsContent value="employee" className="space-y-6">
           <EmployeeClockIn />
           <RealTimeActivityTable />
+          <PaymentsList showEmployeeName={true} />
         </TabsContent>
         
         <TabsContent value="tasks">
