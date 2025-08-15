@@ -65,12 +65,17 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
   // Update time entry mutation
   const updateEntryMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      console.log('Attempting to update time entry:', id, updates);
       const { error } = await supabase
         .from('time_entries')
         .update({ ...updates, updated_at: getManilaDateTime() })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Update error:', error);
+        throw error;
+      }
+      console.log('Time entry updated successfully:', id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
@@ -93,18 +98,31 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
   // Delete time entry mutation
   const deleteEntryMutation = useMutation({
     mutationFn: async (id: string) => {
+      console.log('Attempting to delete time entry:', id);
       const { error } = await supabase
         .from('time_entries')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+      console.log('Time entry deleted successfully:', id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
       queryClient.invalidateQueries({ queryKey: ['allActivities'] });
       toast({ title: "Time entry deleted successfully!" });
+    },
+    onError: (error) => {
+      console.error('Error deleting entry:', error);
+      toast({ 
+        title: "Error deleting entry", 
+        description: "Please check your permissions and try again.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -397,8 +415,9 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                             <AlertDialogAction
                               onClick={() => handleDeleteEntry(entry.id)}
                               className="bg-red-600 hover:bg-red-700"
+                              disabled={deleteEntryMutation.isPending}
                             >
-                              Delete
+                              {deleteEntryMutation.isPending ? 'Deleting...' : 'Delete'}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
