@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useState } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DollarSign, Clock, Edit, Trash2, Save, X } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface Payment {
   id: string;
@@ -22,13 +26,18 @@ interface Payment {
 interface PaymentsListProps {
   employeeId?: string;
   showEmployeeName?: boolean;
+  isAdminMode?: boolean;
 }
 
 export const PaymentsList: React.FC<PaymentsListProps> = ({ 
   employeeId, 
-  showEmployeeName = true 
+  showEmployeeName = true,
+  isAdminMode = false
 }) => {
   const queryClient = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState<string>('');
+  const [editNote, setEditNote] = useState<string>('');
 
   // Fetch payments data
   const { data: payments = [] } = useQuery({
@@ -76,6 +85,91 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
       supabase.removeChannel(channel);
     };
   }, [queryClient, employeeId]);
+
+  // Update payment mutation
+  const updatePaymentMutation = useMutation({
+    mutationFn: async ({ id, amount, note }: { id: string; amount: number; note: string }) => {
+      const { error } = await supabase
+        .from('payments')
+        .update({ amount, note, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      setEditingId(null);
+      toast({ title: "Payment updated successfully!" });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error updating payment", 
+        description: "Please try again.",
+        variant: "destructive" 
+      });
+    }
+  });
+
+  // Delete payment mutation
+  const deletePaymentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('payments')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast({ title: "Payment deleted successfully!" });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error deleting payment", 
+        description: "Please try again.",
+        variant: "destructive" 
+      });
+    }
+  });
+
+  const handleEdit = (payment: Payment) => {
+    setEditingId(payment.id);
+    setEditAmount(payment.amount.toString());
+    setEditNote(payment.note);
+  };
+
+  const handleSave = () => {
+    if (!editingId) return;
+    
+    const amount = parseFloat(editAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ 
+        title: "Invalid amount", 
+        description: "Please enter a valid amount.",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    updatePaymentMutation.mutate({ 
+      id: editingId, 
+      amount, 
+      note: editNote 
+    });
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditAmount('');
+    setEditNote('');
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this payment? This action cannot be undone.')) {
+      deletePaymentMutation.mutate(id);
+    }
+  };
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -153,6 +247,7 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
                   <TableHead>Payment Date</TableHead>
                   <TableHead>Note</TableHead>
                   <TableHead>Paid At</TableHead>
+                  {isAdminMode && <TableHead>Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -164,17 +259,78 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
                       </TableCell>
                     )}
                     <TableCell>
-                      <Badge variant="default" className="text-xs">
-                        ₱{payment.amount.toFixed(2)}
-                      </Badge>
+                      {editingId === payment.id ? (
+                        <Input
+                          type="number"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          className="w-24"
+                          step="0.01"
+                          min="0"
+                        />
+                      ) : (
+                        <Badge variant="default" className="text-xs">
+                          ₱{payment.amount.toFixed(2)}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>{formatDate(payment.payment_date)}</TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {payment.note}
+                    <TableCell className="max-w-xs">
+                      {editingId === payment.id ? (
+                        <Textarea
+                          value={editNote}
+                          onChange={(e) => setEditNote(e.target.value)}
+                          className="min-h-[60px]"
+                          placeholder="Payment note..."
+                        />
+                      ) : (
+                        <span className="truncate">{payment.note}</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {formatDateTime(payment.paid_at)}
                     </TableCell>
+                    {isAdminMode && (
+                      <TableCell>
+                        {editingId === payment.id ? (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={handleSave}
+                              disabled={updatePaymentMutation.isPending}
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancel}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(payment)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(payment.id)}
+                              disabled={deletePaymentMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

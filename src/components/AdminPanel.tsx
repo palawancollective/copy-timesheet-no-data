@@ -187,7 +187,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
       </Card>
 
       {/* All Employee Payments */}
-      <PaymentsList showEmployeeName={true} />
+      <PaymentsList showEmployeeName={true} isAdminMode={true} />
     </div>
   );
 };
