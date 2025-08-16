@@ -56,37 +56,40 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   const handleOperator = (nextOp: NonNullable<typeof op>) => {
     console.log('Operator pressed:', nextOp, 'Current display:', display, 'Previous:', prev, 'Current op:', op);
     
-    setDisplay((curr) => {
-      const currentVal = safeNumber(curr);
-      console.log('Current value calculated:', currentVal);
-      
-      if (prev === null) {
-        console.log('Setting first operand:', currentVal);
-        setPrev(currentVal);
-        setOp(nextOp);
-      } else if (op !== null && !justEvaluated) {
-        console.log('Calculating:', prev, op, currentVal);
-        const result = applyOp(prev, currentVal, op);
-        console.log('Result:', result);
-        
-        if (!Number.isFinite(result)) {
-          setPrev(null);
-          setOp(null);
-          setJustEvaluated(true);
-          return "Error";
-        }
-        setPrev(result);
-        setOp(nextOp);
-        setJustEvaluated(true);
-        return String(result);
-      } else {
-        console.log('Setting new operation');
-        setPrev(currentVal);
-        setOp(nextOp);
-      }
+    const currentVal = safeNumber(display);
+    console.log('Current value calculated:', currentVal);
+    
+    if (prev === null) {
+      // First operand
+      console.log('Setting first operand:', currentVal);
+      setPrev(currentVal);
+      setOp(nextOp);
       setJustEvaluated(false);
-      return curr;
-    });
+    } else if (op !== null && !justEvaluated) {
+      // Chain operations: calculate current result and continue
+      console.log('Calculating:', prev, op, currentVal);
+      const result = applyOp(prev, currentVal, op);
+      console.log('Result:', result);
+      
+      if (!Number.isFinite(result)) {
+        setDisplay("Error");
+        setPrev(null);
+        setOp(null);
+        setJustEvaluated(true);
+        return;
+      }
+      
+      setDisplay(String(result));
+      setPrev(result);
+      setOp(nextOp);
+      setJustEvaluated(false);
+    } else {
+      // After equals or changing operation
+      console.log('Setting new operation');
+      setPrev(currentVal);
+      setOp(nextOp);
+      setJustEvaluated(false);
+    }
   };
 
   const handleEquals = () => {
