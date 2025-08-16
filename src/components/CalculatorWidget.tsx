@@ -21,9 +21,12 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   };
 
   const handleDigit = (d: string) => {
+    console.log('Digit pressed:', d, 'Current display:', display, 'justEvaluated:', justEvaluated);
+    
     setDisplay((curr) => {
       if (curr === "Error") return d === "." ? "0." : d;
       if (justEvaluated) {
+        console.log('Starting new number after evaluation');
         setJustEvaluated(false);
         return d === "." ? "0." : d;
       }
@@ -51,35 +54,54 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   };
 
   const handleOperator = (nextOp: NonNullable<typeof op>) => {
-    const currentVal = safeNumber(display);
+    console.log('Operator pressed:', nextOp, 'Current display:', display, 'Previous:', prev, 'Current op:', op);
     
-    if (prev === null) {
-      setPrev(currentVal);
-      setOp(nextOp);
-    } else if (op !== null && !justEvaluated) {
-      const result = applyOp(prev, currentVal, op);
-      if (!Number.isFinite(result)) {
-        setDisplay("Error");
-        setPrev(null);
-        setOp(null);
+    setDisplay((curr) => {
+      const currentVal = safeNumber(curr);
+      console.log('Current value calculated:', currentVal);
+      
+      if (prev === null) {
+        console.log('Setting first operand:', currentVal);
+        setPrev(currentVal);
+        setOp(nextOp);
+      } else if (op !== null && !justEvaluated) {
+        console.log('Calculating:', prev, op, currentVal);
+        const result = applyOp(prev, currentVal, op);
+        console.log('Result:', result);
+        
+        if (!Number.isFinite(result)) {
+          setPrev(null);
+          setOp(null);
+          setJustEvaluated(true);
+          return "Error";
+        }
+        setPrev(result);
+        setOp(nextOp);
         setJustEvaluated(true);
-        return;
+        return String(result);
+      } else {
+        console.log('Setting new operation');
+        setPrev(currentVal);
+        setOp(nextOp);
       }
-      setDisplay(String(result));
-      setPrev(result);
-      setOp(nextOp);
-    } else {
-      setPrev(currentVal);
-      setOp(nextOp);
-    }
-    setJustEvaluated(false);
+      setJustEvaluated(false);
+      return curr;
+    });
   };
 
   const handleEquals = () => {
-    if (prev === null || op === null) return;
+    console.log('Equals pressed - prev:', prev, 'op:', op, 'display:', display);
+    if (prev === null || op === null) {
+      console.log('No calculation to perform');
+      return;
+    }
+    
     setDisplay((curr) => {
       const currentVal = safeNumber(curr);
+      console.log('Final calculation:', prev, op, currentVal);
       const result = applyOp(prev, currentVal, op);
+      console.log('Final result:', result);
+      
       if (!Number.isFinite(result)) {
         setPrev(null);
         setOp(null);
