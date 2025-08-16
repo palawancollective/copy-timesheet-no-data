@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, CheckCircle, Circle, User, Calendar } from 'lucide-react';
+import { Clock, CheckCircle, Circle, User, Calendar, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { EmployeeScheduleModal } from './EmployeeScheduleModal';
 
@@ -38,7 +38,11 @@ interface TimeEntry {
   lunch_in: string | null;
 }
 
-export const EmployeeClockIn: React.FC = () => {
+interface EmployeeClockInProps {
+  isAdminMode?: boolean;
+}
+
+export const EmployeeClockIn: React.FC<EmployeeClockInProps> = ({ isAdminMode = false }) => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -87,19 +91,29 @@ export const EmployeeClockIn: React.FC = () => {
     }
   });
 
-  // Fetch today's tasks for selected employee (only show incomplete tasks)
+  // Fetch today's tasks for selected employee
   const { data: todaysTasks = [] } = useQuery({
-    queryKey: ['todaysTasks', selectedEmployeeId],
+    queryKey: ['todaysTasks', selectedEmployeeId, isAdminMode],
     queryFn: async () => {
       if (!selectedEmployeeId) return [];
       
       const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
+      let query = supabase
         .from('employee_tasks')
         .select('*')
-        .eq('employee_id', selectedEmployeeId)
-        .eq('is_completed', false)
-        .or(`assigned_date.eq.${today},and(assigned_date.lt.${today},is_completed.eq.false)`)
+        .eq('employee_id', selectedEmployeeId);
+
+      if (isAdminMode) {
+        // Admin sees all tasks for today
+        query = query.eq('assigned_date', today);
+      } else {
+        // Employee sees only incomplete tasks (today and overdue)
+        query = query
+          .eq('is_completed', false)
+          .or(`assigned_date.eq.${today},and(assigned_date.lt.${today},is_completed.eq.false)`);
+      }
+
+      const { data, error } = await query
         .order('assigned_date', { ascending: false })
         .order('priority', { ascending: true });
       
@@ -268,9 +282,26 @@ export const EmployeeClockIn: React.FC = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysTasks', selectedEmployeeId] });
+      queryClient.invalidateQueries({ queryKey: ['todaysTasks', selectedEmployeeId, isAdminMode] });
       queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       toast({ title: "Task updated successfully!" });
+    }
+  });
+
+  // Delete task mutation (admin only)
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('employee_tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todaysTasks', selectedEmployeeId, isAdminMode] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      toast({ title: "Task deleted successfully!" });
     }
   });
 
@@ -289,7 +320,7 @@ export const EmployeeClockIn: React.FC = () => {
           filter: `employee_id=eq.${selectedEmployeeId}`
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['todaysTasks', selectedEmployeeId] });
+          queryClient.invalidateQueries({ queryKey: ['todaysTasks', selectedEmployeeId, isAdminMode] });
           queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         }
       )
@@ -522,6 +553,17 @@ export const EmployeeClockIn: React.FC = () => {
                               <Circle className="h-5 w-5 text-muted-foreground" />
                             )}
                           </Button>
+                          {isAdminMode && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteTaskMutation.mutate(task.id)}
+                              disabled={deleteTaskMutation.isPending}
+                              className="p-1 h-6 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                         <div className="text-sm">
                           <span className={task.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}>
@@ -547,6 +589,7 @@ export const EmployeeClockIn: React.FC = () => {
                     <TableHead>Task</TableHead>
                     <TableHead className="w-24 text-center">Completed</TableHead>
                     <TableHead className="w-32 text-center">Time Completed</TableHead>
+                    {isAdminMode && <TableHead className="w-20 text-center">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -573,6 +616,19 @@ export const EmployeeClockIn: React.FC = () => {
                       <TableCell className="text-center">
                         {formatCompletionTime(task.completed_at)}
                       </TableCell>
+                      {isAdminMode && (
+                        <TableCell className="text-center">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteTaskMutation.mutate(task.id)}
+                            disabled={deleteTaskMutation.isPending}
+                            className="p-1 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

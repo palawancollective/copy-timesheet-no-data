@@ -201,9 +201,9 @@ export const MainDisplay = ({ isAdminMode = false }: { isAdminMode?: boolean }) 
         </TabsList>
         
         <TabsContent value="employee" className="space-y-6">
-          <EmployeeClockIn />
+          <EmployeeClockIn isAdminMode={isAdminMode} />
           <RealTimeActivityTable />
-          <PaymentsList showEmployeeName={true} />
+          <PaymentsList showEmployeeName={true} isAdminMode={isAdminMode} />
         </TabsContent>
         
         <TabsContent value="tasks">
