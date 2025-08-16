@@ -24,6 +24,16 @@ interface TaskWithEmployee {
   employees: Employee;
 }
 
+interface ClockedInEmployeeWithTasks {
+  employee: Employee;
+  timeEntry: {
+    id: string;
+    clock_in: string;
+    clock_out: string | null;
+  };
+  incompleteTasks: TaskWithEmployee[];
+}
+
 interface TaskSummary {
   employee: Employee;
   totalTasks: number;
@@ -36,10 +46,35 @@ export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoH
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split('T')[0];
 
-  // Fetch all today's tasks with employee info
-  const { data: allTasks = [] } = useQuery({
-    queryKey: ['allTasks', today],
+  // Fetch today's clocked-in employees
+  const { data: clockedInEmployees = [] } = useQuery({
+    queryKey: ['clockedInEmployees', today],
     queryFn: async () => {
+      const { data, error } = await supabase
+        .from('time_entries')
+        .select(`
+          id,
+          employee_id,
+          clock_in,
+          clock_out,
+          employees (id, name, hourly_rate)
+        `)
+        .eq('entry_date', today)
+        .not('clock_in', 'is', null);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch today's incomplete tasks for clocked-in employees
+  const { data: allTasks = [] } = useQuery({
+    queryKey: ['incompleteTasks', today, clockedInEmployees],
+    queryFn: async () => {
+      if (clockedInEmployees.length === 0) return [];
+      
+      const employeeIds = clockedInEmployees.map(entry => entry.employee_id);
+      
       const { data, error } = await supabase
         .from('employee_tasks')
         .select(`
@@ -47,17 +82,20 @@ export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoH
           employees (id, name, hourly_rate)
         `)
         .eq('assigned_date', today)
-        .order('updated_at', { ascending: false });
+        .eq('is_completed', false)
+        .in('employee_id', employeeIds)
+        .order('priority', { ascending: true });
       
       if (error) throw error;
       return data as TaskWithEmployee[];
-    }
+    },
+    enabled: clockedInEmployees.length > 0
   });
 
   // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
-      .channel('all-task-updates')
+      .channel('clocked-in-task-updates')
       .on(
         'postgres_changes',
         {
@@ -66,7 +104,18 @@ export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoH
           table: 'employee_tasks'
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['allTasks', today] });
+          queryClient.invalidateQueries({ queryKey: ['incompleteTasks', today, clockedInEmployees] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'time_entries'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['clockedInEmployees', today] });
         }
       )
       .subscribe();
@@ -74,55 +123,24 @@ export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoH
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, today]);
+  }, [queryClient, today, clockedInEmployees]);
 
-  // Process task data by employee
-  const taskSummaries: TaskSummary[] = React.useMemo(() => {
-    const employeeMap = new Map<string, TaskSummary>();
-
-    allTasks.forEach(task => {
-      const employeeId = task.employee_id;
+  // Process clocked-in employees with their incomplete tasks
+  const clockedInWithTasks: ClockedInEmployeeWithTasks[] = React.useMemo(() => {
+    return clockedInEmployees.map(timeEntry => {
+      const employeeTasks = allTasks.filter(task => task.employee_id === timeEntry.employee_id);
       
-      if (!employeeMap.has(employeeId)) {
-        employeeMap.set(employeeId, {
-          employee: task.employees,
-          totalTasks: 0,
-          completedTasks: 0,
-          completionRate: 0,
-          recentCompletions: []
-        });
-      }
-
-      const summary = employeeMap.get(employeeId)!;
-      summary.totalTasks++;
-      
-      if (task.is_completed) {
-        summary.completedTasks++;
-        if (task.completed_at) {
-          summary.recentCompletions.push(task);
-        }
-      }
+      return {
+        employee: timeEntry.employees,
+        timeEntry: {
+          id: timeEntry.id,
+          clock_in: timeEntry.clock_in,
+          clock_out: timeEntry.clock_out
+        },
+        incompleteTasks: employeeTasks
+      };
     });
-
-    // Calculate completion rates and sort recent completions
-    employeeMap.forEach(summary => {
-      summary.completionRate = summary.totalTasks > 0 
-        ? Math.round((summary.completedTasks / summary.totalTasks) * 100)
-        : 0;
-      
-      summary.recentCompletions = summary.recentCompletions
-        .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
-        .slice(0, 3); // Show only the 3 most recent completions
-    });
-
-    return Array.from(employeeMap.values())
-      .sort((a, b) => b.completionRate - a.completionRate);
-  }, [allTasks]);
-
-  const recentCompletions = allTasks
-    .filter(task => task.is_completed && task.completed_at)
-    .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
-    .slice(0, 5);
+  }, [clockedInEmployees, allTasks]);
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -133,116 +151,105 @@ export const RealTimeTaskDisplay: React.FC<{ onGoHome?: () => void }> = ({ onGoH
     });
   };
 
-  const totalTasks = allTasks.length;
-  const totalCompleted = allTasks.filter(task => task.is_completed).length;
-  const overallProgress = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+  const getClockStatus = (clockIn: string, clockOut: string | null) => {
+    if (clockOut) {
+      return { text: "Clocked Out", variant: "secondary" as const };
+    }
+    return { text: "Currently Working", variant: "default" as const };
+  };
 
   return (
     <div className="space-y-6">
-      {/* Overall Progress */}
+      {/* Header */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              Today's Overall Progress
+              <Clock className="h-5 w-5 mr-2" />
+              Employees Clocked In Today
             </span>
-            <Badge variant={overallProgress === 100 ? "default" : "secondary"}>
-              {totalCompleted}/{totalTasks} Tasks
+            <Badge variant="outline">
+              {clockedInWithTasks.length} Active
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progress</span>
-              <span>{overallProgress}%</span>
-            </div>
-            <Progress value={overallProgress} className="h-3" />
-          </div>
-        </CardContent>
       </Card>
 
-
-      {/* Employee Progress */}
+      {/* Clocked-in Employees with Tasks */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {taskSummaries.map((summary) => (
-          <Card key={summary.employee.id} className="relative">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-lg">
-                <span className="flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  {summary.employee.name}
-                </span>
-                <Badge 
-                  variant={summary.completionRate === 100 ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {summary.completionRate}%
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Tasks: {summary.completedTasks}/{summary.totalTasks}</span>
-              </div>
-              <Progress value={summary.completionRate} className="h-2" />
-              
-              {summary.recentCompletions.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-gray-600">Recent completions:</p>
-                  {summary.recentCompletions.map((task) => (
-                    <div key={task.id} className="text-xs text-gray-500 flex items-center">
-                      <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                      <span className="truncate flex-1">{task.task_description}</span>
-                      <span className="ml-1">{formatTime(task.completed_at!)}</span>
-                    </div>
-                  ))}
+        {clockedInWithTasks.map((employeeData) => {
+          const status = getClockStatus(employeeData.timeEntry.clock_in, employeeData.timeEntry.clock_out);
+          
+          return (
+            <Card key={employeeData.employee.id} className="relative">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <span className="flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    {employeeData.employee.name}
+                  </span>
+                  <Badge variant={status.variant} className="text-xs">
+                    {status.text}
+                  </Badge>
+                </CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Clocked in: {formatTime(employeeData.timeEntry.clock_in)}
+                  {employeeData.timeEntry.clock_out && (
+                    <div>Clocked out: {formatTime(employeeData.timeEntry.clock_out)}</div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Pending Tasks: {employeeData.incompleteTasks.length}</span>
+                </div>
+                
+                {employeeData.incompleteTasks.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Current Tasks:</p>
+                    {employeeData.incompleteTasks.map((task) => (
+                      <div key={task.id} className="p-2 bg-muted rounded-lg">
+                        <div className="text-sm font-medium">{task.task_description}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Priority: {task.priority}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <CheckCircle className="h-8 w-8 mx-auto text-success mb-2" />
+                    <p className="text-sm text-muted-foreground">All tasks completed!</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Recent Activity Feed */}
-      {recentCompletions.length > 0 && (
+      {/* Empty State */}
+      {clockedInWithTasks.length === 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Recent Task Completions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentCompletions.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="font-medium">{task.employees.name}</p>
-                      <p className="text-sm text-gray-600">{task.task_description}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{formatTime(task.completed_at!)}</p>
-                    <p className="text-xs text-gray-500">Completed</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <CardContent className="text-center py-8">
+            <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No employees clocked in today</p>
           </CardContent>
         </Card>
       )}
 
-      {totalTasks === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Clock className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">No tasks assigned for today</p>
-          </CardContent>
-        </Card>
+      {/* Go Home Button */}
+      {onGoHome && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            onClick={onGoHome} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Back to Clock-In
+          </Button>
+        </div>
       )}
     </div>
   );
