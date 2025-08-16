@@ -51,27 +51,28 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   };
 
   const handleOperator = (nextOp: NonNullable<typeof op>) => {
-    setDisplay((curr) => {
-      const currentVal = safeNumber(curr);
-      if (prev === null) {
-        setPrev(currentVal);
-        setOp(nextOp);
-      } else if (op !== null && !justEvaluated) {
-        const result = applyOp(prev, currentVal, op);
-        if (!Number.isFinite(result)) {
-          setPrev(null);
-          setOp(null);
-          setJustEvaluated(true);
-          return "Error";
-        }
-        setPrev(result);
-        setOp(nextOp);
-      } else {
-        setOp(nextOp);
+    const currentVal = safeNumber(display);
+    
+    if (prev === null) {
+      setPrev(currentVal);
+      setOp(nextOp);
+    } else if (op !== null && !justEvaluated) {
+      const result = applyOp(prev, currentVal, op);
+      if (!Number.isFinite(result)) {
+        setDisplay("Error");
+        setPrev(null);
+        setOp(null);
+        setJustEvaluated(true);
+        return;
       }
-      setJustEvaluated(false);
-      return "0";
-    });
+      setDisplay(String(result));
+      setPrev(result);
+      setOp(nextOp);
+    } else {
+      setPrev(currentVal);
+      setOp(nextOp);
+    }
+    setJustEvaluated(false);
   };
 
   const handleEquals = () => {
@@ -118,11 +119,11 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
     }
   };
 
-  const Key = ({ children, onClick, variant }: { children: React.ReactNode; onClick: () => void; variant?: "op" | "danger" | "equal" | "num" }) => (
+  const Key = ({ children, onClick, variant, className }: { children: React.ReactNode; onClick: () => void; variant?: "op" | "danger" | "equal" | "num"; className?: string }) => (
     <Button
       type="button"
       variant={variant === "danger" ? "destructive" : variant === "op" ? "outline" : variant === "equal" ? "default" : "secondary"}
-      className="h-10"
+      className={`h-10 ${className || ""}`}
       onClick={onClick}
     >
       {children}
@@ -164,15 +165,14 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
         <Key variant="num" onClick={() => handleDigit("1")}>1</Key>
         <Key variant="num" onClick={() => handleDigit("2")}>2</Key>
         <Key variant="num" onClick={() => handleDigit("3")}>3</Key>
-        <Key variant="equal" onClick={handleEquals}>=</Key>
+        <div className="row-span-2">
+          <Key variant="equal" onClick={handleEquals} className="h-full">=</Key>
+        </div>
 
-        <Key variant="num" onClick={() => handleDigit("0")}>
-          0
-        </Key>
+        <div className="col-span-2">
+          <Key variant="num" onClick={() => handleDigit("0")} className="w-full">0</Key>
+        </div>
         <Key variant="num" onClick={() => handleDigit(".")}>.</Key>
-        {/* Fillers to keep grid balanced */}
-        <div />
-        <div />
       </div>
 
       {onClose && (
