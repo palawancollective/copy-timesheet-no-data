@@ -11,7 +11,7 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   const [display, setDisplay] = useState<string>("0");
   const [prev, setPrev] = useState<number | null>(null);
   const [op, setOp] = useState<"+" | "-" | "*" | "/" | null>(null);
-  const [justEvaluated, setJustEvaluated] = useState(false);
+  const [waitingForOperand, setWaitingForOperand] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const safeNumber = (val: string) => {
@@ -21,22 +21,17 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   };
 
   const handleDigit = (d: string) => {
-    console.log('Digit pressed:', d, 'Current display:', display, 'justEvaluated:', justEvaluated);
-    
-    setDisplay((curr) => {
-      if (curr === "Error") return d === "." ? "0." : d;
-      if (justEvaluated) {
-        console.log('Starting new number after evaluation');
-        setJustEvaluated(false);
-        return d === "." ? "0." : d;
-      }
+    if (waitingForOperand) {
+      setDisplay(d === "." ? "0." : d);
+      setWaitingForOperand(false);
+    } else {
       if (d === ".") {
-        if (curr.includes(".")) return curr;
-        return curr + ".";
+        if (display.includes(".")) return;
+        setDisplay(display + ".");
+      } else {
+        setDisplay(display === "0" ? d : display + d);
       }
-      if (curr === "0") return d;
-      return curr + d;
-    });
+    }
   };
 
   const applyOp = (a: number, b: number, operator: NonNullable<typeof op>) => {
@@ -54,75 +49,56 @@ function CalculatorCore({ onClose, isMobile }: { onClose?: () => void; isMobile?
   };
 
   const handleOperator = (nextOp: NonNullable<typeof op>) => {
-    console.log('Operator pressed:', nextOp, 'Current display:', display, 'Previous:', prev, 'Current op:', op);
-    
-    const currentVal = safeNumber(display);
-    console.log('Current value calculated:', currentVal);
-    
+    const inputValue = safeNumber(display);
+
     if (prev === null) {
-      // First operand
-      console.log('Setting first operand:', currentVal);
-      setPrev(currentVal);
-      setOp(nextOp);
-      setJustEvaluated(false);
-    } else if (op !== null && !justEvaluated) {
-      // Chain operations: calculate current result and continue
-      console.log('Calculating:', prev, op, currentVal);
-      const result = applyOp(prev, currentVal, op);
-      console.log('Result:', result);
+      setPrev(inputValue);
+    } else if (op) {
+      const currentValue = waitingForOperand ? prev : inputValue;
+      const result = applyOp(prev, currentValue, op);
+
+      if (!Number.isFinite(result)) {
+        setDisplay("Error");
+        setPrev(null);
+        setOp(null);
+        setWaitingForOperand(true);
+        return;
+      }
+
+      setDisplay(String(result));
+      setPrev(result);
+    }
+
+    setWaitingForOperand(true);
+    setOp(nextOp);
+  };
+
+  const handleEquals = () => {
+    const inputValue = safeNumber(display);
+
+    if (prev !== null && op) {
+      const result = applyOp(prev, inputValue, op);
       
       if (!Number.isFinite(result)) {
         setDisplay("Error");
         setPrev(null);
         setOp(null);
-        setJustEvaluated(true);
+        setWaitingForOperand(true);
         return;
       }
-      
-      setDisplay(String(result));
-      setPrev(result);
-      setOp(nextOp);
-      setJustEvaluated(false);
-    } else {
-      // After equals or changing operation
-      console.log('Setting new operation');
-      setPrev(currentVal);
-      setOp(nextOp);
-      setJustEvaluated(false);
-    }
-  };
 
-  const handleEquals = () => {
-    console.log('Equals pressed - prev:', prev, 'op:', op, 'display:', display);
-    if (prev === null || op === null) {
-      console.log('No calculation to perform');
-      return;
-    }
-    
-    setDisplay((curr) => {
-      const currentVal = safeNumber(curr);
-      console.log('Final calculation:', prev, op, currentVal);
-      const result = applyOp(prev, currentVal, op);
-      console.log('Final result:', result);
-      
-      if (!Number.isFinite(result)) {
-        setPrev(null);
-        setOp(null);
-        setJustEvaluated(true);
-        return "Error";
-      }
+      setDisplay(String(result));
       setPrev(null);
       setOp(null);
-      setJustEvaluated(true);
-      return String(result);
-    });
+      setWaitingForOperand(true);
+    }
   };
 
   const handleClearAll = () => {
     setDisplay("0");
     setPrev(null);
     setOp(null);
-    setJustEvaluated(false);
+    setWaitingForOperand(false);
   };
 
   const handleClearEntry = () => {
