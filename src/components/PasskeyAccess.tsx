@@ -14,7 +14,7 @@ export const PasskeyAccess: React.FC<PasskeyAccessProps> = ({ onAuthenticated })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passkey === '4467') {
+    if (passkey === '5309') {
       onAuthenticated();
     } else {
       setError('Invalid passkey. Please try again.');
