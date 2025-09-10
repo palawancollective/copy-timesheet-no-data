@@ -33,7 +33,7 @@ export const TimeTrackingApp = () => {
   }, []);
 
   const handleAdminAccess = (passkey: string) => {
-    if (passkey === '4467') {
+    if (passkey === '5309') {
       setIsAdminMode(true);
       setShowInvoiceMode(false);
       setShowScheduleMode(false);
@@ -44,7 +44,7 @@ export const TimeTrackingApp = () => {
   };
 
   const handlePaidAccess = (passkey: string) => {
-    if (passkey === '4467') {
+    if (passkey === '5309') {
       setShowPaidPasskeyModal(false);
       setShowPaidModal(true);
     } else {
@@ -53,7 +53,7 @@ export const TimeTrackingApp = () => {
   };
 
   const handleInvoiceAccess = (passkey: string) => {
-    if (passkey === '4467') {
+    if (passkey === '5309') {
       setShowInvoicePasskeyModal(false);
       setShowInvoiceMode(true);
       setShowScheduleMode(false);
