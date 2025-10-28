@@ -78,14 +78,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     
     const clockIn = new Date(entry.clock_in);
     const clockOut = new Date(entry.clock_out);
-    let totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
-    
-    if (entry.lunch_out && entry.lunch_in) {
-      const lunchOut = new Date(entry.lunch_out);
-      const lunchIn = new Date(entry.lunch_in);
-      const lunchMinutes = (lunchIn.getTime() - lunchOut.getTime()) / (1000 * 60);
-      totalMinutes -= lunchMinutes;
-    }
+    const totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
     
     return Math.max(0, totalMinutes / 60);
   };
@@ -96,21 +89,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     
     const clockIn = new Date(entry.clock_in);
     const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
-    let totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
-    
-    // Subtract lunch break if both lunch times are recorded
-    if (entry.lunch_out && entry.lunch_in) {
-      const lunchOut = new Date(entry.lunch_out);
-      const lunchIn = new Date(entry.lunch_in);
-      const lunchMinutes = (lunchIn.getTime() - lunchOut.getTime()) / (1000 * 60);
-      totalMinutes -= lunchMinutes;
-    } else if (entry.lunch_out && !entry.lunch_in && !entry.clock_out) {
-      // If currently on lunch, subtract ongoing lunch time
-      const lunchOut = new Date(entry.lunch_out);
-      const now = new Date();
-      const ongoingLunchMinutes = (now.getTime() - lunchOut.getTime()) / (1000 * 60);
-      totalMinutes -= ongoingLunchMinutes;
-    }
+    const totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
     
     return Math.max(0, totalMinutes / 60);
   };

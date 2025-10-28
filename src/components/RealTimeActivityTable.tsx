@@ -12,8 +12,6 @@ interface ActivityEntry {
   entry_date: string;
   clock_in: string | null;
   clock_out: string | null;
-  lunch_out: string | null;
-  lunch_in: string | null;
   is_paid: boolean | null;
   paid_amount: number | null;
   paid_at: string | null;
@@ -169,14 +167,6 @@ export const RealTimeActivityTable: React.FC = () => {
                     <span className="font-medium">Clock Out:</span>
                     <p className="text-muted-foreground">{formatTime(activity.clock_out)}</p>
                   </div>
-                  <div>
-                    <span className="font-medium">Lunch Out:</span>
-                    <p className="text-muted-foreground">{formatTime(activity.lunch_out)}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Lunch In:</span>
-                    <p className="text-muted-foreground">{formatTime(activity.lunch_in)}</p>
-                  </div>
                 </div>
                 
                 <div className="flex justify-between items-center pt-2 border-t">
@@ -207,8 +197,6 @@ export const RealTimeActivityTable: React.FC = () => {
                   <TableHead>Employee</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Clock In</TableHead>
-                  <TableHead>Lunch Out</TableHead>
-                  <TableHead>Lunch In</TableHead>
                   <TableHead>Clock Out</TableHead>
                   <TableHead>Tasks</TableHead>
                   <TableHead>Payment</TableHead>
@@ -223,8 +211,6 @@ export const RealTimeActivityTable: React.FC = () => {
                     </TableCell>
                     <TableCell>{formatDate(activity.entry_date)}</TableCell>
                     <TableCell>{formatTime(activity.clock_in)}</TableCell>
-                    <TableCell>{formatTime(activity.lunch_out)}</TableCell>
-                    <TableCell>{formatTime(activity.lunch_in)}</TableCell>
                     <TableCell>{formatTime(activity.clock_out)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

@@ -152,44 +152,6 @@ export const MainDisplay = ({ isAdminMode = false }: { isAdminMode?: boolean }) 
     }
   });
 
-  const lunchOutMutation = useMutation({
-    mutationFn: async (employeeId: string) => {
-      const today = getManilaDate();
-      const now = getManilaDateTime();
-      
-      const { error } = await supabase
-        .from('time_entries')
-        .update({ lunch_out: now, updated_at: now })
-        .eq('employee_id', employeeId)
-        .eq('entry_date', today);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      toast({ title: "Lunch out recorded!" });
-    }
-  });
-
-  const lunchInMutation = useMutation({
-    mutationFn: async (employeeId: string) => {
-      const today = getManilaDate();
-      const now = getManilaDateTime();
-      
-      const { error } = await supabase
-        .from('time_entries')
-        .update({ lunch_in: now, updated_at: now })
-        .eq('employee_id', employeeId)
-        .eq('entry_date', today);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      toast({ title: "Lunch in recorded!" });
-    }
-  });
-
   const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
   return (

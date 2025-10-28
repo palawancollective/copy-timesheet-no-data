@@ -34,8 +34,6 @@ interface TimeEntry {
   entry_date: string;
   clock_in: string | null;
   clock_out: string | null;
-  lunch_out: string | null;
-  lunch_in: string | null;
 }
 
 interface EmployeeClockInProps {
@@ -219,52 +217,6 @@ export const EmployeeClockIn: React.FC<EmployeeClockInProps> = ({ isAdminMode = 
     }
   });
 
-  // Lunch out mutation
-  const lunchOutMutation = useMutation({
-    mutationFn: async (employeeId: string) => {
-      const now = getManilaDateTime();
-      const today = new Date().toISOString().split('T')[0];
-      
-      const { error } = await supabase
-        .from('time_entries')
-        .update({ lunch_out: now, updated_at: now })
-        .eq('employee_id', employeeId)
-        .eq('entry_date', today);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
-      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
-      toast({ title: "Lunch out recorded!" });
-    }
-  });
-
-  // Lunch in mutation
-  const lunchInMutation = useMutation({
-    mutationFn: async (employeeId: string) => {
-      const now = getManilaDateTime();
-      const today = new Date().toISOString().split('T')[0];
-      
-      const { error } = await supabase
-        .from('time_entries')
-        .update({ lunch_in: now, updated_at: now })
-        .eq('employee_id', employeeId)
-        .eq('entry_date', today);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todaysTimeEntry', selectedEmployeeId] });
-      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['allActivities'] });
-      toast({ title: "Lunch in recorded!" });
-    }
-  });
-
   // Toggle task completion mutation
   const toggleTaskMutation = useMutation({
     mutationFn: async ({ taskId, isCompleted }: { taskId: string; isCompleted: boolean }) => {
@@ -356,16 +308,6 @@ export const EmployeeClockIn: React.FC<EmployeeClockInProps> = ({ isAdminMode = 
     clockOutMutation.mutate(selectedEmployeeId);
   };
 
-  const handleLunchOut = () => {
-    if (!selectedEmployeeId) return;
-    lunchOutMutation.mutate(selectedEmployeeId);
-  };
-
-  const handleLunchIn = () => {
-    if (!selectedEmployeeId) return;
-    lunchInMutation.mutate(selectedEmployeeId);
-  };
-
   const handleToggleTask = (taskId: string, isCompleted: boolean) => {
     toggleTaskMutation.mutate({ taskId, isCompleted });
   };
@@ -452,30 +394,8 @@ export const EmployeeClockIn: React.FC<EmployeeClockInProps> = ({ isAdminMode = 
                   })}
                 </p>
                 
-                {/* Clock Out and Lunch Buttons */}
+                {/* Clock Out Button */}
                 <div className="flex flex-col gap-3">
-                  {!todaysTimeEntry.lunch_out && (
-                    <Button
-                      type="button"
-                      onClick={handleLunchOut}
-                      disabled={lunchOutMutation.isPending}
-                      variant="warning"
-                    >
-                      Lunch Out
-                    </Button>
-                  )}
-                  
-                  {todaysTimeEntry.lunch_out && !todaysTimeEntry.lunch_in && (
-                    <Button
-                      type="button"
-                      onClick={handleLunchIn}
-                      disabled={lunchInMutation.isPending}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Lunch In
-                    </Button>
-                  )}
-                  
                   {!todaysTimeEntry.clock_out && (
                     <Button
                       type="button"

@@ -975,8 +975,6 @@ export type Database = {
           entry_date: string
           id: string
           is_paid: boolean | null
-          lunch_in: string | null
-          lunch_out: string | null
           paid_amount: number | null
           paid_at: string | null
           updated_at: string
@@ -989,8 +987,6 @@ export type Database = {
           entry_date?: string
           id?: string
           is_paid?: boolean | null
-          lunch_in?: string | null
-          lunch_out?: string | null
           paid_amount?: number | null
           paid_at?: string | null
           updated_at?: string
@@ -1003,8 +999,6 @@ export type Database = {
           entry_date?: string
           id?: string
           is_paid?: boolean | null
-          lunch_in?: string | null
-          lunch_out?: string | null
           paid_amount?: number | null
           paid_at?: string | null
           updated_at?: string

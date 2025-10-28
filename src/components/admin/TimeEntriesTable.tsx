@@ -154,8 +154,6 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
       entry_date: entry.entry_date,
       clock_in: entry.clock_in ? new Date(entry.clock_in).toISOString().slice(0, 16) : '',
       clock_out: entry.clock_out ? new Date(entry.clock_out).toISOString().slice(0, 16) : '',
-      lunch_out: entry.lunch_out ? new Date(entry.lunch_out).toISOString().slice(0, 16) : '',
-      lunch_in: entry.lunch_in ? new Date(entry.lunch_in).toISOString().slice(0, 16) : '',
       paid_amount: entry.paid_amount || '',
       is_paid: entry.is_paid || false
     });
@@ -182,18 +180,6 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
       updates.clock_out = new Date(editForm.clock_out).toISOString();
     } else {
       updates.clock_out = null;
-    }
-    
-    if (editForm.lunch_out) {
-      updates.lunch_out = new Date(editForm.lunch_out).toISOString();
-    } else {
-      updates.lunch_out = null;
-    }
-    
-    if (editForm.lunch_in) {
-      updates.lunch_in = new Date(editForm.lunch_in).toISOString();
-    } else {
-      updates.lunch_in = null;
     }
     
     if (editForm.paid_amount && !isNaN(parseFloat(editForm.paid_amount))) {
@@ -240,8 +226,6 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
             <TableHead>Date</TableHead>
             <TableHead>Clock In</TableHead>
             <TableHead>Clock Out</TableHead>
-            <TableHead>Lunch Out</TableHead>
-            <TableHead>Lunch In</TableHead>
             <TableHead>Hours</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Paid Amount</TableHead>
@@ -292,30 +276,6 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                     />
                   ) : (
                     formatDateTime(entry.clock_out)
-                  )}
-                </TableCell>
-                <TableCell>
-                  {isEditing ? (
-                    <Input
-                      type="datetime-local"
-                      value={editForm.lunch_out}
-                      onChange={(e) => setEditForm({...editForm, lunch_out: e.target.value})}
-                      className="w-40"
-                    />
-                  ) : (
-                    formatDateTime(entry.lunch_out)
-                  )}
-                </TableCell>
-                <TableCell>
-                  {isEditing ? (
-                    <Input
-                      type="datetime-local"
-                      value={editForm.lunch_in}
-                      onChange={(e) => setEditForm({...editForm, lunch_in: e.target.value})}
-                      className="w-40"
-                    />
-                  ) : (
-                    formatDateTime(entry.lunch_in)
                   )}
                 </TableCell>
                 <TableCell>{workHours.toFixed(2)}h</TableCell>

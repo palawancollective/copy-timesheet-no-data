@@ -12,8 +12,6 @@ interface TimeEntry {
   entry_date: string;
   clock_in: string | null;
   clock_out: string | null;
-  lunch_out: string | null;
-  lunch_in: string | null;
   is_paid: boolean | null;
   paid_amount: number | null;
   paid_at: string | null;
@@ -35,15 +33,7 @@ export const TodaysTimeEntries: React.FC<TodaysTimeEntriesProps> = ({ entries })
     
     const clockIn = new Date(entry.clock_in);
     const clockOut = new Date(entry.clock_out);
-    let totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
-    
-    // Subtract lunch break if both lunch times are recorded
-    if (entry.lunch_out && entry.lunch_in) {
-      const lunchOut = new Date(entry.lunch_out);
-      const lunchIn = new Date(entry.lunch_in);
-      const lunchMinutes = (lunchIn.getTime() - lunchOut.getTime()) / (1000 * 60);
-      totalMinutes -= lunchMinutes;
-    }
+    const totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
     
     return Math.max(0, totalMinutes / 60);
   };
@@ -122,14 +112,6 @@ export const TodaysTimeEntries: React.FC<TodaysTimeEntriesProps> = ({ entries })
             <span className="text-gray-500">Clock Out:</span>
             <div className="font-medium">{formatTime(entry.clock_out)}</div>
           </div>
-          <div>
-            <span className="text-gray-500">Lunch Out:</span>
-            <div className="font-medium">{formatTime(entry.lunch_out)}</div>
-          </div>
-          <div>
-            <span className="text-gray-500">Lunch In:</span>
-            <div className="font-medium">{formatTime(entry.lunch_in)}</div>
-          </div>
         </div>
         
         <div className="flex justify-between items-center pt-2 border-t">
@@ -178,8 +160,6 @@ export const TodaysTimeEntries: React.FC<TodaysTimeEntriesProps> = ({ entries })
                 <TableRow>
                   <TableHead>Employee</TableHead>
                   <TableHead>Clock In</TableHead>
-                  <TableHead>Lunch Out</TableHead>
-                  <TableHead>Lunch In</TableHead>
                   <TableHead>Clock Out</TableHead>
                   <TableHead>Hours</TableHead>
                   <TableHead>Pay</TableHead>
@@ -198,8 +178,6 @@ export const TodaysTimeEntries: React.FC<TodaysTimeEntriesProps> = ({ entries })
                         {entry.employees.name}
                       </TableCell>
                       <TableCell>{formatTime(entry.clock_in)}</TableCell>
-                      <TableCell>{formatTime(entry.lunch_out)}</TableCell>
-                      <TableCell>{formatTime(entry.lunch_in)}</TableCell>
                       <TableCell>{formatTime(entry.clock_out)}</TableCell>
                       <TableCell>{workHours.toFixed(2)}h</TableCell>
                       <TableCell>₱{totalPay.toFixed(2)}</TableCell>

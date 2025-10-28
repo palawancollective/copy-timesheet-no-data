@@ -12,8 +12,6 @@ interface TimeEntry {
   entry_date: string;
   clock_in: string | null;
   clock_out: string | null;
-  lunch_out: string | null;
-  lunch_in: string | null;
   is_paid: boolean | null;
   paid_amount: number | null;
   paid_at: string | null;
@@ -58,21 +56,7 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
     
     const clockIn = new Date(entry.clock_in);
     const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
-    let totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
-    
-    // Subtract lunch break if both lunch times are recorded
-    if (entry.lunch_out && entry.lunch_in) {
-      const lunchOut = new Date(entry.lunch_out);
-      const lunchIn = new Date(entry.lunch_in);
-      const lunchMinutes = (lunchIn.getTime() - lunchOut.getTime()) / (1000 * 60);
-      totalMinutes -= lunchMinutes;
-    } else if (entry.lunch_out && !entry.lunch_in) {
-      // If lunch out but not back in, subtract ongoing lunch time
-      const lunchOut = new Date(entry.lunch_out);
-      const now = new Date();
-      const ongoingLunchMinutes = (now.getTime() - lunchOut.getTime()) / (1000 * 60);
-      totalMinutes -= ongoingLunchMinutes;
-    }
+    const totalMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
     
     return Math.max(0, totalMinutes / 60);
   };
@@ -101,7 +85,6 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
   const getWorkStatus = (entry: TimeEntry) => {
     if (!entry.clock_in) return 'Not started';
     if (entry.clock_out) return 'Finished';
-    if (entry.lunch_out && !entry.lunch_in) return 'On lunch';
     return 'Working';
   };
 
@@ -135,14 +118,6 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
           <div>
             <span className="text-muted-foreground">Clock Out:</span>
             <div className="font-medium text-foreground">{formatTime(entry.clock_out)}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Lunch Out:</span>
-            <div className="font-medium text-foreground">{formatTime(entry.lunch_out)}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Lunch In:</span>
-            <div className="font-medium text-foreground">{formatTime(entry.lunch_in)}</div>
           </div>
         </div>
         
@@ -184,8 +159,6 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
                     <TableHead className="sticky top-0 bg-card">Employee</TableHead>
                     <TableHead className="sticky top-0 bg-card">Date</TableHead>
                     <TableHead className="sticky top-0 bg-card">Clock In</TableHead>
-                    <TableHead className="sticky top-0 bg-card">Lunch Out</TableHead>
-                    <TableHead className="sticky top-0 bg-card">Lunch In</TableHead>
                     <TableHead className="sticky top-0 bg-card">Clock Out</TableHead>
                     <TableHead className="sticky top-0 bg-card">Hours</TableHead>
                     <TableHead className="sticky top-0 bg-card">Status</TableHead>
@@ -205,8 +178,6 @@ export const AllTimeEntries: React.FC<AllTimeEntriesProps> = ({ entries }) => {
                         </TableCell>
                         <TableCell>{formatDate(entry.entry_date)}</TableCell>
                         <TableCell>{formatTime(entry.clock_in)}</TableCell>
-                        <TableCell>{formatTime(entry.lunch_out)}</TableCell>
-                        <TableCell>{formatTime(entry.lunch_in)}</TableCell>
                         <TableCell>{formatTime(entry.clock_out)}</TableCell>
                         <TableCell className="font-mono">
                           <span className={getWorkHoursTextColor(workStatus)}>

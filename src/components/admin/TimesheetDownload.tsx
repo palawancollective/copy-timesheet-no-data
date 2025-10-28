@@ -29,7 +29,7 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
 
   const generateCSVContent = (entries: any[]) => {
     return [
-      ['Employee', 'Date', 'Clock In', 'Clock Out', 'Lunch Out', 'Lunch In', 'Hours', 'Rate', 'Pay', 'Paid Status', 'Paid Amount'].join(','),
+      ['Employee', 'Date', 'Clock In', 'Clock Out', 'Hours', 'Rate', 'Pay', 'Paid Status', 'Paid Amount'].join(','),
       ...entries.map(entry => {
         const workHours = calculateWorkHoursForCSV(entry);
         const totalPay = workHours * entry.employees.hourly_rate;
@@ -39,8 +39,6 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
           entry.entry_date,
           entry.clock_in ? `"${new Date(entry.clock_in).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : '',
           entry.clock_out ? `"${new Date(entry.clock_out).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : 'Still Working',
-          entry.lunch_out ? `"${new Date(entry.lunch_out).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : '',
-          entry.lunch_in ? `"${new Date(entry.lunch_in).toLocaleString('en-US', { timeZone: 'Asia/Manila' })}"` : '',
           workHours.toFixed(2),
           entry.employees.hourly_rate.toFixed(2),
           totalPay.toFixed(2),
@@ -124,14 +122,14 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
         const line = dataLines[i];
         const values = parseCSVLine(line);
         
-        if (values.length < 11) {
-          console.warn(`Row ${i + 2}: Expected 11 columns, got ${values.length}`);
+        if (values.length < 9) {
+          console.warn(`Row ${i + 2}: Expected 9 columns, got ${values.length}`);
           continue;
         }
 
-        const [employeeName, date, clockIn, clockOut, lunchOut, lunchIn, hours, rate, pay, paidStatus, paidAmount] = values;
+        const [employeeName, date, clockIn, clockOut, hours, rate, pay, paidStatus, paidAmount] = values;
         
-        console.log(`Row ${i + 2}:`, { employeeName, date, clockIn, clockOut, lunchOut, lunchIn, paidStatus });
+        console.log(`Row ${i + 2}:`, { employeeName, date, clockIn, clockOut, paidStatus });
         
         // Find employee
         const employee = employeeMap.get(employeeName.toLowerCase());
@@ -171,8 +169,6 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
           entry_date: date,
           clock_in: parseTime(clockIn),
           clock_out: parseTime(clockOut),
-          lunch_out: parseTime(lunchOut),
-          lunch_in: parseTime(lunchIn),
           is_paid: paidStatus.trim().toLowerCase() === 'paid',
           paid_amount: paidAmount ? parseFloat(paidAmount) : null,
           paid_at: paidStatus.trim().toLowerCase() === 'paid' ? new Date().toISOString() : null
