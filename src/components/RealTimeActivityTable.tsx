@@ -33,15 +33,15 @@ export const RealTimeActivityTable: React.FC = () => {
   const { data: activities = [] } = useQuery({
     queryKey: ['allActivities'],
     queryFn: async () => {
-      // Get time entries with employee data
+      // Get time entries with employee data, sorted by date (newest first)
       const { data: timeEntries, error: timeError } = await supabase
         .from('time_entries')
         .select(`
           *,
           employees (name, hourly_rate)
         `)
-        .order('updated_at', { ascending: false })
-        .order('entry_date', { ascending: false });
+        .order('entry_date', { ascending: false })
+        .order('updated_at', { ascending: false });
       
       if (timeError) throw timeError;
 
