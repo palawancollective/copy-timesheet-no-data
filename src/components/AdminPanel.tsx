@@ -12,6 +12,7 @@ import { TimesheetDownload } from './admin/TimesheetDownload';
 import { HoursCalculator } from './admin/HoursCalculator';
 import { TimeEntriesTable } from './admin/TimeEntriesTable';
 import { PaymentsList } from './PaymentsList';
+import { DailyTaskAssignment } from './admin/DailyTaskAssignment';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -129,6 +130,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
       {/* Add Employee */}
       <AddEmployeeForm />
+
+      {/* Daily Task Assignment */}
+      <DailyTaskAssignment />
 
       {/* Employee Task Management with Schedule */}
       <Card>

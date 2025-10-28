@@ -936,6 +936,36 @@ export type Database = {
         }
         Relationships: []
       }
+      task_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          order_index: number
+          task_description: string
+          time_slot: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          task_description: string
+          time_slot: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          task_description?: string
+          time_slot?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       time_entries: {
         Row: {
           clock_in: string | null
