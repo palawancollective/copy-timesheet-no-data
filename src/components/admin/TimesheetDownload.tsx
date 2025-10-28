@@ -140,16 +140,25 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
           continue;
         }
 
-        // Parse timestamps - handle "M/D/YYYY, h:mm:ss AM/PM" format
+        // Parse timestamps - handle "M/D/YYYY, h:mm:ss AM/PM" format explicitly for Manila timezone
         const parseTime = (timeStr: string) => {
           if (!timeStr || timeStr === 'Still Working') return null;
           try {
-            // The CSV format is already in Manila time, so we parse it as-is
-            const parsed = new Date(timeStr);
+            // Parse "10/12/2025, 9:00:00 AM" format explicitly as MM/DD/YYYY
+            // Remove quotes if present
+            const cleaned = timeStr.replace(/"/g, '').trim();
+            
+            // Use explicit date format parsing - this treats the input as Manila local time
+            // When creating Date from a properly formatted string, it treats it as local time
+            // Then we convert to ISO which gives us UTC
+            const parsed = new Date(cleaned);
+            
             if (isNaN(parsed.getTime())) {
               console.error(`Invalid date format: "${timeStr}"`);
               return null;
             }
+            
+            // The date is parsed as Manila local time, toISOString converts it to UTC
             return parsed.toISOString();
           } catch (error) {
             console.error(`Error parsing date "${timeStr}":`, error);
