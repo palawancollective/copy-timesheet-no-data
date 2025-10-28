@@ -193,13 +193,13 @@ export const DailyTaskAssignment: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <ClipboardCheck className="h-6 w-6" />
             Daily Task Assignment
           </CardTitle>
-          <div className="flex items-center gap-4">
-            <Badge variant="outline" className="text-base px-3 py-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="text-sm px-3 py-1">
               <Calendar className="h-4 w-4 mr-2" />
               {new Date(today).toLocaleDateString('en-US', { 
                 weekday: 'short', 
@@ -208,8 +208,8 @@ export const DailyTaskAssignment: React.FC = () => {
               })}
             </Badge>
             {totalAssignments > 0 && (
-              <Badge variant="default" className="text-base px-3 py-1">
-                {totalAssignments} assignments selected
+              <Badge variant="default" className="text-sm px-3 py-1">
+                {totalAssignments} selected
               </Badge>
             )}
           </div>
@@ -219,98 +219,102 @@ export const DailyTaskAssignment: React.FC = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {/* Employee Header */}
-          <div className="flex items-center gap-2 pb-2 border-b sticky top-0 bg-background z-10">
-            <div className="w-16 font-semibold text-sm">Time</div>
-            <div className="flex-1 font-semibold text-sm">Task Description</div>
-            <div className="flex gap-2">
-              {employees.map(employee => (
-                <div key={employee.id} className="w-24 text-center">
-                  <div className="text-xs font-semibold truncate" title={employee.name}>
-                    {employee.name}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Tasks with checkboxes */}
-          <ScrollArea className="h-[600px]">
-            <div className="space-y-3">
-              {taskTemplates.map((template) => (
-                <div 
-                  key={template.id} 
-                  className="flex items-start gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="w-16 text-xs font-medium text-muted-foreground shrink-0">
-                    {template.time_slot}
-                  </div>
-                  <div className="flex-1 text-sm">
-                    {template.task_description}
-                    <div className="mt-1 flex gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs"
-                        onClick={() => handleSelectAllForTask(template.id)}
-                      >
-                        Select All
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs"
-                        onClick={() => handleClearAllForTask(template.id)}
-                      >
-                        Clear
-                      </Button>
+        <ScrollArea className="h-[600px]">
+          <div className="space-y-4">
+            {taskTemplates.map((template) => {
+              const selectedEmployees = taskAssignments.get(template.id) || new Set<string>();
+              
+              return (
+                <Card key={template.id} className="border-2 hover:border-primary/50 transition-colors">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div className="space-y-1 flex-1">
+                        <Badge variant="outline" className="text-xs">
+                          {template.time_slot}
+                        </Badge>
+                        <p className="text-sm font-medium leading-relaxed">
+                          {template.task_description}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => handleSelectAllForTask(template.id)}
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => handleClearAllForTask(template.id)}
+                        >
+                          Clear
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {employees.map(employee => {
-                      const isChecked = taskAssignments.get(template.id)?.has(employee.id) || false;
-                      const alreadyAssigned = isTaskAssignedToEmployee(template.task_description, employee.id);
-                      
-                      return (
-                        <div key={employee.id} className="w-24 flex justify-center items-center">
-                          <div className="flex flex-col items-center gap-1">
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {employees.map(employee => {
+                        const isChecked = selectedEmployees.has(employee.id);
+                        const alreadyAssigned = isTaskAssignedToEmployee(template.task_description, employee.id);
+                        
+                        return (
+                          <div 
+                            key={employee.id} 
+                            className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
+                              isChecked ? 'bg-primary/10 border-primary' : 
+                              alreadyAssigned ? 'bg-muted border-muted' : 
+                              'hover:bg-accent'
+                            }`}
+                          >
                             <Checkbox
+                              id={`${template.id}-${employee.id}`}
                               checked={isChecked}
                               onCheckedChange={(checked) => 
                                 handleCheckboxChange(template.id, employee.id, checked as boolean)
                               }
                               disabled={alreadyAssigned}
                             />
+                            <label
+                              htmlFor={`${template.id}-${employee.id}`}
+                              className="flex-1 text-sm cursor-pointer truncate"
+                              title={employee.name}
+                            >
+                              {employee.name}
+                            </label>
                             {alreadyAssigned && (
-                              <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                                Assigned
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                ✓
                               </Badge>
                             )}
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-
-          {/* Assign Button */}
-          <div className="flex justify-end pt-4 border-t">
-            <Button
-              onClick={handleAssignTasks}
-              disabled={assignTasksMutation.isPending || totalAssignments === 0}
-              size="lg"
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Users className="h-5 w-5 mr-2" />
-              Assign {totalAssignments} Task{totalAssignments !== 1 ? 's' : ''} to Employees
-            </Button>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
+        </ScrollArea>
+
+        {/* Assign Button */}
+        <div className="flex justify-center sm:justify-end pt-4 mt-4 border-t">
+          <Button
+            onClick={handleAssignTasks}
+            disabled={assignTasksMutation.isPending || totalAssignments === 0}
+            size="lg"
+            className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+          >
+            <Users className="h-5 w-5 mr-2" />
+            Assign {totalAssignments} Task{totalAssignments !== 1 ? 's' : ''} to Employees
+          </Button>
         </div>
       </CardContent>
     </Card>
