@@ -80,6 +80,29 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
     window.URL.revokeObjectURL(url);
   };
 
+  // Proper CSV parser that handles quoted values with commas
+  const parseCSVLine = (line: string): string[] => {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    
+    return values;
+  };
+
   const handleBulkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -99,11 +122,16 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
 
       for (let i = 0; i < dataLines.length; i++) {
         const line = dataLines[i];
-        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const values = parseCSVLine(line);
         
-        if (values.length < 11) continue;
+        if (values.length < 11) {
+          console.warn(`Row ${i + 2}: Expected 11 columns, got ${values.length}`);
+          continue;
+        }
 
         const [employeeName, date, clockIn, clockOut, lunchOut, lunchIn, hours, rate, pay, paidStatus, paidAmount] = values;
+        
+        console.log(`Row ${i + 2}:`, { employeeName, date, clockIn, clockOut, lunchOut, lunchIn, paidStatus });
         
         // Find employee
         const employee = employeeMap.get(employeeName.toLowerCase());
@@ -112,12 +140,19 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
           continue;
         }
 
-        // Parse timestamps for Manila timezone
-        const parseTime = (dateStr: string, timeStr: string) => {
+        // Parse timestamps - handle "M/D/YYYY, h:mm:ss AM/PM" format
+        const parseTime = (timeStr: string) => {
           if (!timeStr || timeStr === 'Still Working') return null;
           try {
-            return new Date(timeStr).toISOString();
-          } catch {
+            // The CSV format is already in Manila time, so we parse it as-is
+            const parsed = new Date(timeStr);
+            if (isNaN(parsed.getTime())) {
+              console.error(`Invalid date format: "${timeStr}"`);
+              return null;
+            }
+            return parsed.toISOString();
+          } catch (error) {
+            console.error(`Error parsing date "${timeStr}":`, error);
             return null;
           }
         };
@@ -125,15 +160,16 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
         const entry = {
           employee_id: employee.id,
           entry_date: date,
-          clock_in: parseTime(date, clockIn),
-          clock_out: parseTime(date, clockOut),
-          lunch_out: parseTime(date, lunchOut),
-          lunch_in: parseTime(date, lunchIn),
-          is_paid: paidStatus.toLowerCase() === 'paid',
+          clock_in: parseTime(clockIn),
+          clock_out: parseTime(clockOut),
+          lunch_out: parseTime(lunchOut),
+          lunch_in: parseTime(lunchIn),
+          is_paid: paidStatus.trim().toLowerCase() === 'paid',
           paid_amount: paidAmount ? parseFloat(paidAmount) : null,
-          paid_at: paidStatus.toLowerCase() === 'paid' ? new Date().toISOString() : null
+          paid_at: paidStatus.trim().toLowerCase() === 'paid' ? new Date().toISOString() : null
         };
 
+        console.log('Parsed entry:', entry);
         entriesToInsert.push(entry);
       }
 
