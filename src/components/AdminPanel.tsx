@@ -168,6 +168,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
             <TimesheetDownload 
               timeEntries={timeEntries}
               calculateWorkHoursForCSV={calculateWorkHoursForCSV}
+              employees={employees}
             />
           </CardTitle>
         </CardHeader>

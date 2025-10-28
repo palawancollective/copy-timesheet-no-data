@@ -1,22 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Download, CalendarIcon } from 'lucide-react';
+import { Download, CalendarIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TimesheetDownloadProps {
   timeEntries: any[];
   calculateWorkHoursForCSV: (entry: any) => number;
+  employees: any[];
 }
 
 export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({ 
   timeEntries, 
-  calculateWorkHoursForCSV 
+  calculateWorkHoursForCSV,
+  employees
 }) => {
   const [csvStartDate, setCsvStartDate] = useState<Date>();
   const [csvEndDate, setCsvEndDate] = useState<Date>();
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const generateCSVContent = (entries: any[]) => {
     return [
@@ -71,15 +80,109 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
     window.URL.revokeObjectURL(url);
   };
 
-  const downloadBulkTimesheet = () => {
-    const csvContent = generateCSVContent(timeEntries);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bulk-time-in-sheet-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const handleBulkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      // Skip header row
+      const dataLines = lines.slice(1);
+      
+      const employeeMap = new Map(employees.map(emp => [emp.name.toLowerCase(), emp]));
+      const entriesToInsert = [];
+      const errors = [];
+
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i];
+        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        
+        if (values.length < 11) continue;
+
+        const [employeeName, date, clockIn, clockOut, lunchOut, lunchIn, hours, rate, pay, paidStatus, paidAmount] = values;
+        
+        // Find employee
+        const employee = employeeMap.get(employeeName.toLowerCase());
+        if (!employee) {
+          errors.push(`Row ${i + 2}: Employee "${employeeName}" not found`);
+          continue;
+        }
+
+        // Parse timestamps for Manila timezone
+        const parseTime = (dateStr: string, timeStr: string) => {
+          if (!timeStr || timeStr === 'Still Working') return null;
+          try {
+            return new Date(timeStr).toISOString();
+          } catch {
+            return null;
+          }
+        };
+
+        const entry = {
+          employee_id: employee.id,
+          entry_date: date,
+          clock_in: parseTime(date, clockIn),
+          clock_out: parseTime(date, clockOut),
+          lunch_out: parseTime(date, lunchOut),
+          lunch_in: parseTime(date, lunchIn),
+          is_paid: paidStatus.toLowerCase() === 'paid',
+          paid_amount: paidAmount ? parseFloat(paidAmount) : null,
+          paid_at: paidStatus.toLowerCase() === 'paid' ? new Date().toISOString() : null
+        };
+
+        entriesToInsert.push(entry);
+      }
+
+      if (errors.length > 0) {
+        toast({
+          title: 'Upload Warnings',
+          description: errors.slice(0, 3).join('\n') + (errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''),
+          variant: 'destructive'
+        });
+      }
+
+      if (entriesToInsert.length === 0) {
+        toast({
+          title: 'No Data to Import',
+          description: 'No valid entries found in the CSV file',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Insert entries into database
+      const { error } = await supabase
+        .from('time_entries')
+        .insert(entriesToInsert);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Upload Successful',
+        description: `Successfully imported ${entriesToInsert.length} time entries`
+      });
+
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysEntries'] });
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Upload Failed',
+        description: error instanceof Error ? error.message : 'Failed to upload time entries',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   return (
@@ -158,13 +261,23 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
         Download CSV
       </Button>
       
-      <Button
-        onClick={downloadBulkTimesheet}
-        className="bg-green-600 hover:bg-green-700"
-      >
-        <Download className="h-4 w-4 mr-2" />
-        Bulk Time In Sheet
-      </Button>
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={handleBulkUpload}
+          className="hidden"
+        />
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          {isUploading ? 'Uploading...' : 'Bulk Time In Sheet'}
+        </Button>
+      </div>
     </div>
   );
 };
