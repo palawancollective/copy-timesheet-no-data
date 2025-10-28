@@ -18,23 +18,10 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
   const [csvStartDate, setCsvStartDate] = useState<Date>();
   const [csvEndDate, setCsvEndDate] = useState<Date>();
 
-  const downloadTimesheet = () => {
-    // Filter entries by selected date range for CSV
-    let filteredEntries = timeEntries;
-    
-    if (csvStartDate) {
-      const startDateStr = format(csvStartDate, 'yyyy-MM-dd');
-      const endDateStr = csvEndDate ? format(csvEndDate, 'yyyy-MM-dd') : startDateStr;
-      
-      filteredEntries = timeEntries.filter(entry => {
-        const entryDate = entry.entry_date;
-        return entryDate >= startDateStr && entryDate <= endDateStr;
-      });
-    }
-
-    const csvContent = [
+  const generateCSVContent = (entries: any[]) => {
+    return [
       ['Employee', 'Date', 'Clock In', 'Clock Out', 'Lunch Out', 'Lunch In', 'Hours', 'Rate', 'Pay', 'Paid Status', 'Paid Amount'].join(','),
-      ...filteredEntries.map(entry => {
+      ...entries.map(entry => {
         const workHours = calculateWorkHoursForCSV(entry);
         const totalPay = workHours * entry.employees.hourly_rate;
         
@@ -53,7 +40,23 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
         ].join(',');
       })
     ].join('\n');
+  };
 
+  const downloadTimesheet = () => {
+    // Filter entries by selected date range for CSV
+    let filteredEntries = timeEntries;
+    
+    if (csvStartDate) {
+      const startDateStr = format(csvStartDate, 'yyyy-MM-dd');
+      const endDateStr = csvEndDate ? format(csvEndDate, 'yyyy-MM-dd') : startDateStr;
+      
+      filteredEntries = timeEntries.filter(entry => {
+        const entryDate = entry.entry_date;
+        return entryDate >= startDateStr && entryDate <= endDateStr;
+      });
+    }
+
+    const csvContent = generateCSVContent(filteredEntries);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -68,8 +71,19 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
     window.URL.revokeObjectURL(url);
   };
 
+  const downloadBulkTimesheet = () => {
+    const csvContent = generateCSVContent(timeEntries);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bulk-time-in-sheet-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex flex-wrap gap-2 items-center">
       {/* CSV Date Selection */}
       <div className="flex gap-2 items-center">
         <Popover>
@@ -142,6 +156,14 @@ export const TimesheetDownload: React.FC<TimesheetDownloadProps> = ({
       >
         <Download className="h-4 w-4 mr-2" />
         Download CSV
+      </Button>
+      
+      <Button
+        onClick={downloadBulkTimesheet}
+        className="bg-green-600 hover:bg-green-700"
+      >
+        <Download className="h-4 w-4 mr-2" />
+        Bulk Time In Sheet
       </Button>
     </div>
   );
