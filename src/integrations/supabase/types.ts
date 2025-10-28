@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_quick_actions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author: string
@@ -22,6 +52,8 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          image_url: string | null
+          image_urls: string[]
           title: string
           updated_at: string
         }
@@ -32,6 +64,8 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          image_url?: string | null
+          image_urls?: string[]
           title: string
           updated_at?: string
         }
@@ -42,8 +76,40 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          image_url?: string | null
+          image_urls?: string[]
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      business_plan_buttons: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -481,6 +547,7 @@ export type Database = {
           is_available: boolean
           name: string
           price: number
+          staff_id: string | null
           updated_at: string
         }
         Insert: {
@@ -494,6 +561,7 @@ export type Database = {
           is_available?: boolean
           name: string
           price?: number
+          staff_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -507,6 +575,7 @@ export type Database = {
           is_available?: boolean
           name?: string
           price?: number
+          staff_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -598,6 +667,42 @@ export type Database = {
           special_requests?: string | null
           status?: string
           total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      page_content: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          order_index: number
+          page_type: string
+          section_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          page_type: string
+          section_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          page_type?: string
+          section_id?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -810,6 +915,24 @@ export type Database = {
           is_active?: boolean
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      staff: {
+        Row: {
+          created_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          role?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1098,9 +1221,35 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      is_staff: { Args: never; Returns: boolean }
+      set_menu_item_availability: {
+        Args: { p_available: boolean; p_item_id: string }
+        Returns: {
+          id: string
+          is_available: boolean
+          updated_at: string
+        }[]
+      }
+      toggle_menu_item_availability:
+        | {
+            Args: { i_is_available: boolean; i_item_id: string }
+            Returns: {
+              id: string
+              is_available: boolean
+              updated_at: string
+            }[]
+          }
+        | {
+            Args: { p_item_id: number }
+            Returns: {
+              id: number
+              name: string
+              new_availability: boolean
+            }[]
+          }
     }
     Enums: {
-      app_role: "manager" | "user"
+      app_role: "manager" | "user" | "admin" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1228,7 +1377,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["manager", "user"],
+      app_role: ["manager", "user", "admin", "staff"],
     },
   },
 } as const
