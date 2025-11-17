@@ -98,10 +98,10 @@ export const TimeTrackingApp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-app-gradient-from to-app-gradient-to">
+    <div className="min-h-screen w-full bg-gradient-to-br from-app-gradient-from to-app-gradient-to">
       {/* Fixed Header */}
       <header className="sticky top-0 z-50 bg-card shadow-lg border-b-4 border-primary">
-        <div className="w-full px-4 py-3">
+        <div className="w-full px-3 sm:px-4 py-3">
           {/* Logo - Centered at top for all devices */}
           <div className="flex justify-between items-center mb-3">
             <div className="flex-1" />
