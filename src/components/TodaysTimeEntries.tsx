@@ -87,115 +87,122 @@ export const TodaysTimeEntries: React.FC<TodaysTimeEntriesProps> = ({ entries })
   const MobileEntryCard = ({ entry }: { entry: TimeEntry }) => {
     const workHours = calculateWorkHours(entry);
     const totalPay = calculatePay(entry);
-    
+
     return (
-      <div className="bg-gray-50 rounded-lg p-4 mb-3 border">
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="font-semibold text-gray-800 text-sm">{entry.employees.name}</h3>
-            <p className="text-xs text-gray-600">Today's Entry</p>
+      <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base truncate">{entry.employees.name}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">₱{entry.employees.hourly_rate}/hr</p>
           </div>
-          <div className="text-right">
-            <div className="text-lg font-mono font-semibold text-gray-800">
-              {workHours.toFixed(2)}h
-            </div>
-            <div className="text-sm font-medium">₱{totalPay.toFixed(2)}</div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div>
-            <span className="text-gray-500">Clock In:</span>
-            <div className="font-medium">{formatTime(entry.clock_in)}</div>
-          </div>
-          <div>
-            <span className="text-gray-500">Clock Out:</span>
-            <div className="font-medium">{formatTime(entry.clock_out)}</div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center pt-2 border-t">
-          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-            entry.is_paid 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-yellow-100 text-yellow-800'
-          }`}>
-            {entry.is_paid ? 'Paid' : 'Unpaid'}
-          </span>
           {!entry.is_paid && entry.clock_out && (
             <Button
               onClick={() => markAsPaidMutation.mutate(entry.id)}
               disabled={markAsPaidMutation.isPending}
-              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 text-xs h-auto"
+              size="sm"
+              className="bg-success hover:bg-success/90 shrink-0"
             >
               Mark Paid
             </Button>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span className="text-muted-foreground text-xs block mb-1">Clock In</span>
+            <p className="font-medium">{formatTime(entry.clock_in)}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground text-xs block mb-1">Clock Out</span>
+            <p className="font-medium">{formatTime(entry.clock_out)}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground text-xs block mb-1">Work Hours</span>
+            <p className="font-semibold text-primary">{workHours.toFixed(2)} hrs</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground text-xs block mb-1">Total Pay</span>
+            <p className="font-semibold text-success">₱{totalPay.toFixed(2)}</p>
+          </div>
+        </div>
+
+        {entry.is_paid && (
+          <div className="pt-3 border-t">
+            <span className="text-success font-semibold text-sm">
+              ✓ Paid: ₱{entry.paid_amount?.toFixed(2)}
+            </span>
+            <span className="text-muted-foreground text-xs block mt-1">
+              {new Date(entry.paid_at!).toLocaleDateString()}
+            </span>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-      <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-4">Today's Time Entries</h2>
+    <div className="space-y-4 w-full">
+      <h2 className="text-xl lg:text-2xl font-bold px-2 lg:px-0">Today's Entries</h2>
       
       {entries.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No time entries for today</p>
+        <p className="text-muted-foreground text-center py-8">No entries for today</p>
       ) : (
         <>
-          {/* Mobile View */}
-          <div className="block md:hidden">
-            <div className="max-h-80 overflow-y-auto">
-              {entries.map((entry) => (
-                <MobileEntryCard key={entry.id} entry={entry} />
-              ))}
-            </div>
+          {/* Mobile View - Cards */}
+          <div className="block lg:hidden space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto px-2">
+            {entries.map((entry) => (
+              <MobileEntryCard key={entry.id} entry={entry} />
+            ))}
           </div>
 
-          {/* Desktop View */}
-          <div className="hidden md:block overflow-x-auto">
+          {/* Desktop View - Table */}
+          <div className="hidden lg:block overflow-auto max-h-[600px] border rounded-lg">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
-                  <TableHead>Employee</TableHead>
+                  <TableHead>Employee Name</TableHead>
+                  <TableHead>Hourly Rate</TableHead>
                   <TableHead>Clock In</TableHead>
                   <TableHead>Clock Out</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead>Pay</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead>Work Hours</TableHead>
+                  <TableHead>Total Pay</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {entries.map((entry) => {
                   const workHours = calculateWorkHours(entry);
                   const totalPay = calculatePay(entry);
-                  
+
                   return (
                     <TableRow key={entry.id}>
-                      <TableCell className="font-medium">
-                        {entry.employees.name}
-                      </TableCell>
+                      <TableCell className="font-medium">{entry.employees.name}</TableCell>
+                      <TableCell>₱{entry.employees.hourly_rate}/hr</TableCell>
                       <TableCell>{formatTime(entry.clock_in)}</TableCell>
                       <TableCell>{formatTime(entry.clock_out)}</TableCell>
-                      <TableCell>{workHours.toFixed(2)}h</TableCell>
-                      <TableCell>₱{totalPay.toFixed(2)}</TableCell>
+                      <TableCell>{workHours.toFixed(2)} hrs</TableCell>
+                      <TableCell className="font-semibold text-success">₱{totalPay.toFixed(2)}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          entry.is_paid 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {entry.is_paid ? 'Paid' : 'Unpaid'}
-                        </span>
+                        {entry.is_paid ? (
+                          <span className="text-success">
+                            Paid: ₱{entry.paid_amount?.toFixed(2)}
+                            <br />
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(entry.paid_at!).toLocaleDateString()}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Unpaid</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {!entry.is_paid && entry.clock_out && (
                           <Button
                             onClick={() => markAsPaidMutation.mutate(entry.id)}
                             disabled={markAsPaidMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
+                            size="sm"
+                            className="bg-success hover:bg-success/90"
                           >
                             Mark Paid
                           </Button>
