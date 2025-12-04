@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calculator, CalendarIcon } from 'lucide-react';
+import { Calculator, CalendarIcon, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -26,10 +26,12 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
       name: string;
       hours: number;
       pay: number;
+      rate: number;
     }>;
   } | null>(null);
+  const [lastCalculatedAt, setLastCalculatedAt] = useState<number | null>(null);
 
-  const calculateTotalHoursAndPay = () => {
+  const calculateTotalHoursAndPay = useCallback(() => {
     if (!calculationDate) {
       toast({
         title: "Error",
@@ -51,14 +53,15 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
     // Calculate totals
     let totalHours = 0;
     let totalPay = 0;
-    const employeeBreakdown: Array<{ name: string; hours: number; pay: number; }> = [];
+    const employeeBreakdown: Array<{ name: string; hours: number; pay: number; rate: number; }> = [];
 
     // Group by employee
-    const employeeMap = new Map<string, { name: string; hours: number; pay: number; }>();
+    const employeeMap = new Map<string, { name: string; hours: number; pay: number; rate: number; }>();
 
     filteredEntries.forEach(entry => {
       const workHours = calculateWorkHours(entry);
-      const employeePay = workHours * entry.employees.hourly_rate;
+      const hourlyRate = entry.employees?.hourly_rate || 0;
+      const employeePay = workHours * hourlyRate;
       
       totalHours += workHours;
       totalPay += employeePay;
@@ -69,9 +72,10 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
         existing.pay += employeePay;
       } else {
         employeeMap.set(entry.employee_id, {
-          name: entry.employees.name,
+          name: entry.employees?.name || 'Unknown',
           hours: workHours,
-          pay: employeePay
+          pay: employeePay,
+          rate: hourlyRate
         });
       }
     });
@@ -83,12 +87,21 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
       totalPay,
       employeeBreakdown
     });
+    setLastCalculatedAt(Date.now());
 
     toast({
       title: "Calculation Complete",
       description: `Total: ${totalHours.toFixed(2)} hours, ₱${totalPay.toFixed(2)}`,
     });
-  };
+  }, [calculationDate, endDate, timeEntries, calculateWorkHours]);
+
+  // Auto-recalculate when timeEntries change (e.g., after hourly rate update)
+  useEffect(() => {
+    if (calculationResults && calculationDate) {
+      // Recalculate silently when data changes
+      calculateTotalHoursAndPay();
+    }
+  }, [timeEntries]); // Only re-run when timeEntries changes
 
   return (
     <div className="mb-6 p-4 border rounded-lg bg-gray-50">
@@ -184,11 +197,12 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
             
             <div>
               <h5 className="font-medium mb-2">Employee Breakdown:</h5>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
+              <div className="space-y-1 max-h-40 overflow-y-auto">
                 {calculationResults.employeeBreakdown.map((emp, index) => (
-                  <div key={index} className="text-sm flex justify-between">
-                    <span>{emp.name}:</span>
-                    <span>{emp.hours.toFixed(2)}h - ₱{emp.pay.toFixed(2)}</span>
+                  <div key={index} className="text-sm flex justify-between items-center py-1 border-b border-gray-100 last:border-0">
+                    <span className="font-medium">{emp.name}</span>
+                    <span className="text-muted-foreground text-xs">₱{emp.rate}/hr</span>
+                    <span className="text-right">{emp.hours.toFixed(2)}h = <span className="text-green-600 font-medium">₱{emp.pay.toFixed(2)}</span></span>
                   </div>
                 ))}
               </div>
