@@ -54,6 +54,8 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
   const [newTaskPriority, setNewTaskPriority] = useState('1');
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editTaskDescription, setEditTaskDescription] = useState('');
+  const [isEditingRate, setIsEditingRate] = useState(false);
+  const [editHourlyRate, setEditHourlyRate] = useState(employee.hourly_rate.toString());
   const queryClient = useQueryClient();
 
   const getManilaDateTime = () => {
@@ -158,6 +160,27 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
     }
   });
 
+  // Update hourly rate mutation
+  const updateHourlyRateMutation = useMutation({
+    mutationFn: async (newRate: number) => {
+      const { error } = await supabase
+        .from('employees')
+        .update({ hourly_rate: newRate })
+        .eq('id', employee.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      setIsEditingRate(false);
+      toast({ title: 'Hourly rate updated successfully!' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Failed to update hourly rate', description: err?.message, variant: 'destructive' });
+    }
+  });
+
   // Delete employee & all related data (tasks, schedules, time entries, payment notes)
   const deleteEmployeeMutation = useMutation({
     mutationFn: async () => {
@@ -178,6 +201,15 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
       toast({ title: 'Failed to delete employee', description: err?.message, variant: 'destructive' });
     }
   });
+
+  const handleUpdateHourlyRate = () => {
+    const rate = parseFloat(editHourlyRate);
+    if (isNaN(rate) || rate < 0) {
+      toast({ title: 'Please enter a valid hourly rate', variant: 'destructive' });
+      return;
+    }
+    updateHourlyRateMutation.mutate(rate);
+  };
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,6 +308,65 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Hourly Rate Section - Admin Only */}
+          {isAdminMode && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Payroll Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <Label className="text-sm font-medium">Hourly Rate:</Label>
+                  {isEditingRate ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">₱</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editHourlyRate}
+                        onChange={(e) => setEditHourlyRate(e.target.value)}
+                        className="w-28"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleUpdateHourlyRate}
+                        disabled={updateHourlyRateMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditingRate(false);
+                          setEditHourlyRate(employee.hourly_rate.toString());
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">₱{employee.hourly_rate}/hour</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditingRate(true);
+                          setEditHourlyRate(employee.hourly_rate.toString());
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Add New Task - Admin Only */}
           {isAdminMode && (
             <Card>
@@ -286,7 +377,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleAddTask} className="flex gap-4">
+                <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
                     <Label htmlFor="taskDescription">Task Description</Label>
                     <Input
@@ -297,7 +388,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                       required
                     />
                   </div>
-                  <div className="w-24">
+                  <div className="w-full sm:w-24">
                     <Label htmlFor="priority">Priority</Label>
                     <Input
                       id="priority"
@@ -312,7 +403,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                     <Button
                       type="submit"
                       disabled={addTaskMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
                     >
                       Add Task
                     </Button>
