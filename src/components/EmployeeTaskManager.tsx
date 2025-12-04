@@ -56,7 +56,14 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
   const [editTaskDescription, setEditTaskDescription] = useState('');
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [editHourlyRate, setEditHourlyRate] = useState(employee.hourly_rate.toString());
+  const [currentRate, setCurrentRate] = useState(employee.hourly_rate);
   const queryClient = useQueryClient();
+
+  // Sync local state when employee prop changes
+  React.useEffect(() => {
+    setCurrentRate(employee.hourly_rate);
+    setEditHourlyRate(employee.hourly_rate.toString());
+  }, [employee.hourly_rate]);
 
   const getManilaDateTime = () => {
     const now = new Date();
@@ -169,11 +176,21 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
         .eq('id', employee.id);
       
       if (error) throw error;
+      return newRate;
     },
-    onSuccess: () => {
+    onSuccess: (newRate) => {
+      // Update local state immediately
+      setCurrentRate(newRate);
+      setEditHourlyRate(newRate.toString());
+      setIsEditingRate(false);
+      
+      // Invalidate all related queries to refresh everywhere
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      setIsEditingRate(false);
+      queryClient.invalidateQueries({ queryKey: ['todayTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['activeTimeEntries'] });
+      
       toast({ title: 'Hourly rate updated successfully!' });
     },
     onError: (err: any) => {
@@ -265,8 +282,8 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-gray-600">
-              <p>Hourly Rate: ₱{employee.hourly_rate}/hour</p>
+            <div className="text-sm text-muted-foreground">
+              <p>Hourly Rate: ₱{currentRate}/hour</p>
               <p>Tasks: {completedTasks} of {totalTasks} completed</p>
             </div>
           </CardContent>
@@ -341,7 +358,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                         variant="outline"
                         onClick={() => {
                           setIsEditingRate(false);
-                          setEditHourlyRate(employee.hourly_rate.toString());
+                          setEditHourlyRate(currentRate.toString());
                         }}
                       >
                         <X className="h-4 w-4" />
@@ -349,13 +366,13 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold">₱{employee.hourly_rate}/hour</span>
+                      <span className="font-semibold">₱{currentRate}/hour</span>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => {
                           setIsEditingRate(true);
-                          setEditHourlyRate(employee.hourly_rate.toString());
+                          setEditHourlyRate(currentRate.toString());
                         }}
                       >
                         <Edit className="h-4 w-4" />
