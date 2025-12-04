@@ -160,6 +160,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
           <HoursCalculator 
             timeEntries={timeEntries}
             calculateWorkHours={calculateWorkHours}
+            employees={employees}
           />
           
           {/* Time Entries Table */}

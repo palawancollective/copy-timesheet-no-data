@@ -8,14 +8,22 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
+interface Employee {
+  id: string;
+  name: string;
+  hourly_rate: number;
+}
+
 interface HoursCalculatorProps {
   timeEntries: any[];
   calculateWorkHours: (entry: any) => number;
+  employees: Employee[];
 }
 
 export const HoursCalculator: React.FC<HoursCalculatorProps> = ({ 
   timeEntries, 
-  calculateWorkHours 
+  calculateWorkHours,
+  employees 
 }) => {
   const [calculationDate, setCalculationDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
@@ -58,9 +66,18 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
     // Group by employee
     const employeeMap = new Map<string, { name: string; hours: number; pay: number; rate: number; }>();
 
+    // Create a map of current employee rates for quick lookup
+    const employeeRateMap = new Map<string, { name: string; rate: number }>();
+    employees.forEach(emp => {
+      employeeRateMap.set(emp.id, { name: emp.name, rate: emp.hourly_rate });
+    });
+
     filteredEntries.forEach(entry => {
       const workHours = calculateWorkHours(entry);
-      const hourlyRate = entry.employees?.hourly_rate || 0;
+      // Use fresh rate from employees prop, fallback to entry data
+      const empData = employeeRateMap.get(entry.employee_id);
+      const hourlyRate = empData?.rate ?? entry.employees?.hourly_rate ?? 0;
+      const employeeName = empData?.name ?? entry.employees?.name ?? 'Unknown';
       const employeePay = workHours * hourlyRate;
       
       totalHours += workHours;
@@ -72,7 +89,7 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
         existing.pay += employeePay;
       } else {
         employeeMap.set(entry.employee_id, {
-          name: entry.employees?.name || 'Unknown',
+          name: employeeName,
           hours: workHours,
           pay: employeePay,
           rate: hourlyRate
@@ -93,7 +110,7 @@ export const HoursCalculator: React.FC<HoursCalculatorProps> = ({
       title: "Calculation Complete",
       description: `Total: ${totalHours.toFixed(2)} hours, ₱${totalPay.toFixed(2)}`,
     });
-  }, [calculationDate, endDate, timeEntries, calculateWorkHours]);
+  }, [calculationDate, endDate, timeEntries, calculateWorkHours, employees]);
 
   // Auto-recalculate when timeEntries change (e.g., after hourly rate update)
   useEffect(() => {
