@@ -13,6 +13,7 @@ import { HoursCalculator } from './admin/HoursCalculator';
 import { TimeEntriesTable } from './admin/TimeEntriesTable';
 import { PaymentsList } from './PaymentsList';
 import { DailyTaskAssignment } from './admin/DailyTaskAssignment';
+import { DeleteAllDataButton } from './admin/DeleteAllDataButton';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -109,6 +110,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
       {/* Add Employee */}
       <AddEmployeeForm />
+
+      {/* Danger Zone - Delete All Data */}
+      <Card className="border-destructive/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-destructive text-sm">Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DeleteAllDataButton />
+        </CardContent>
+      </Card>
 
       {/* Daily Task Assignment */}
       <DailyTaskAssignment />
