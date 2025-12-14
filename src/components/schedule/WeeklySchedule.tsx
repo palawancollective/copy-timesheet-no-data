@@ -5,7 +5,7 @@ import { EmployeeWeekModal } from './EmployeeWeekModal';
 import { ShiftModal } from './ShiftModal';
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { WeeklyScheduleProps, ShiftModalData, TodayShift, DaySchedule } from '@/types/schedule';
-import { getWeekDates } from '@/lib/scheduleUtils';
+import { getWeekDates, BROKEN_SHIFT_PRESET } from '@/lib/scheduleUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = false }) => {
@@ -104,6 +104,25 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = fa
     });
   };
 
+  const handleSaveBrokenShift = (employeeId: string, date: string) => {
+    // Create two schedule entries for broken shift
+    BROKEN_SHIFT_PRESET.blocks.forEach((block) => {
+      addScheduleMutation.mutate({
+        employee_id: employeeId,
+        schedule_date: date,
+        time_in: block.time_in,
+        time_out: block.time_out
+      });
+    });
+    setIsShiftModalOpen(false);
+    setShiftModalData({
+      employee_id: '',
+      date: '',
+      time_in: '09:00',
+      time_out: '17:00'
+    });
+  };
+
   const openEmployeeWeekModal = (employeeId: string) => {
     setSelectedEmployee(employeeId);
   };
@@ -156,6 +175,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ isAdminMode = fa
           onShiftDataChange={setShiftModalData}
           employees={employees}
           onSave={handleSaveShift}
+          onSaveBrokenShift={handleSaveBrokenShift}
           isLoading={addScheduleMutation.isPending || updateScheduleMutation.isPending}
         />
       )}

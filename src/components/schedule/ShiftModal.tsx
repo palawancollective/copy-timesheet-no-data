@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Employee, ShiftModalData } from '@/types/schedule';
-import { SHIFT_PRESETS } from '@/lib/scheduleUtils';
+import { SHIFT_PRESETS, BROKEN_SHIFT_PRESET } from '@/lib/scheduleUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface ShiftModalProps {
@@ -21,6 +21,7 @@ interface ShiftModalProps {
   onShiftDataChange: (data: ShiftModalData) => void;
   employees: Employee[];
   onSave: () => void;
+  onSaveBrokenShift?: (employeeId: string, date: string) => void;
   isLoading: boolean;
 }
 
@@ -31,9 +32,18 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
   onShiftDataChange,
   employees,
   onSave,
+  onSaveBrokenShift,
   isLoading
 }) => {
   const { toast } = useToast();
+
+  const handleBrokenShift = () => {
+    if (!shiftData.employee_id || !shiftData.date) {
+      toast({ title: "Please select employee and date first", variant: "destructive" });
+      return;
+    }
+    onSaveBrokenShift?.(shiftData.employee_id, shiftData.date);
+  };
 
   const handleSave = () => {
     if (!shiftData.employee_id || !shiftData.date || !shiftData.time_in || !shiftData.time_out) {
@@ -124,6 +134,15 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                   {preset.label}
                 </Button>
               ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBrokenShift}
+                disabled={isLoading}
+                className="text-xs col-span-2"
+              >
+                {BROKEN_SHIFT_PRESET.label} (7-11 AM & 5-9 PM)
+              </Button>
             </div>
           </div>
 
