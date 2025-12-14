@@ -7,6 +7,15 @@ export const SHIFT_PRESETS = [
   { label: 'Maintenance Shift', time_in: '08:00', time_out: '17:00' },
 ];
 
+// Broken shift preset (two time blocks)
+export const BROKEN_SHIFT_PRESET = {
+  label: 'Broken Shift',
+  blocks: [
+    { time_in: '07:00', time_out: '11:00' },
+    { time_in: '17:00', time_out: '21:00' }
+  ]
+};
+
 // Get current week's Sunday
 export const getCurrentWeekStart = (): string => {
   const today = new Date();
