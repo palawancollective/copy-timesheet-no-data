@@ -15,9 +15,9 @@ interface Payment {
   employee_id: string;
   amount: number;
   payment_date: string;
-  paid_at: string;
   note: string;
   created_at: string;
+  updated_at: string;
   employees?: {
     name: string;
   };
@@ -49,7 +49,7 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
           *,
           employees (name)
         `)
-        .order('paid_at', { ascending: false });
+        .order('payment_date', { ascending: false });
 
       if (employeeId) {
         query = query.eq('employee_id', employeeId);
@@ -229,7 +229,7 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
                 </div>
                 
                 <div className="text-xs text-muted-foreground">
-                  Paid: {formatDateTime(payment.paid_at)}
+                  Paid: {formatDateTime(payment.payment_date)}
                 </div>
               </div>
             ))}
@@ -288,7 +288,7 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatDateTime(payment.paid_at)}
+                      {formatDateTime(payment.payment_date)}
                     </TableCell>
                     {isAdminMode && (
                       <TableCell>
