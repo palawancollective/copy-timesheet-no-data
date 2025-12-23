@@ -137,31 +137,33 @@ export const DeleteAllDataButton: React.FC = () => {
             <AlertTriangle className="h-5 w-5" />
             Delete All Data
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
-            <p className="font-semibold text-destructive">
-              This action cannot be undone!
-            </p>
-            <p>
-              This will permanently delete:
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>All employees</li>
-              <li>All time entries</li>
-              <li>All employee tasks</li>
-              <li>All schedules</li>
-              <li>All daily task templates</li>
-              <li>All payment records</li>
-              <li>All payment notes</li>
-            </ul>
-            <p className="pt-2">
-              Type <strong>DELETE ALL</strong> to confirm:
-            </p>
-            <Input
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Type DELETE ALL"
-              className="mt-2"
-            />
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <p className="font-semibold text-destructive">
+                This action cannot be undone!
+              </p>
+              <p className="text-sm text-muted-foreground">
+                This will permanently delete:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                <li>All employees</li>
+                <li>All time entries</li>
+                <li>All employee tasks</li>
+                <li>All schedules</li>
+                <li>All daily task templates</li>
+                <li>All payment records</li>
+                <li>All payment notes</li>
+              </ul>
+              <p className="pt-2 text-sm text-muted-foreground">
+                Type <strong>DELETE ALL</strong> to confirm:
+              </p>
+              <Input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Type DELETE ALL"
+                className="mt-2"
+              />
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
