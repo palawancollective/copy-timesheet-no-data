@@ -202,7 +202,7 @@ export const EmployeeTaskManager: React.FC<EmployeeTaskManagerProps> = ({ employ
   const deleteEmployeeMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc('delete_employee_and_related', {
-        p_employee_id: employee.id,
+        employee_id_param: employee.id,
       });
       if (error) throw error;
     },
