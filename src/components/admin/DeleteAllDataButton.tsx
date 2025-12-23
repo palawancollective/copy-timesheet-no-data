@@ -73,6 +73,14 @@ export const DeleteAllDataButton: React.FC = () => {
 
       if (schedulesError) throw schedulesError;
 
+      // Delete daily task templates (used by Daily Task Assignment)
+      const { error: taskTemplatesError } = await supabase
+        .from('task_templates')
+        .delete()
+        .gte('id', '00000000-0000-0000-0000-000000000000');
+
+      if (taskTemplatesError) throw taskTemplatesError;
+
       // Finally delete employees
       const { error: employeesError } = await supabase
         .from('employees')
@@ -89,6 +97,12 @@ export const DeleteAllDataButton: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['weekly_schedules'] });
       queryClient.invalidateQueries({ queryKey: ['payment_notes'] });
+
+      // Task assignment + templates
+      queryClient.invalidateQueries({ queryKey: ['taskTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysAssignments'] });
+      queryClient.invalidateQueries({ queryKey: ['todaysTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
 
       toast({
         title: "All Data Deleted",
@@ -135,7 +149,9 @@ export const DeleteAllDataButton: React.FC = () => {
               <li>All time entries</li>
               <li>All employee tasks</li>
               <li>All schedules</li>
+              <li>All daily task templates</li>
               <li>All payment records</li>
+              <li>All payment notes</li>
             </ul>
             <p className="pt-2">
               Type <strong>DELETE ALL</strong> to confirm:
