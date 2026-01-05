@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, DollarSign, FileText, Calendar } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { DollarSign, FileText } from 'lucide-react';
+import palawanLogo from '@/assets/palawan-collective-logo.png';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
@@ -11,7 +11,6 @@ import { WeeklySchedule } from './schedule/WeeklySchedule';
 import { ThemeToggle } from './ThemeToggle';
 
 export const TimeTrackingApp = () => {
-  const { theme } = useTheme();
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPasskeyModal, setShowPasskeyModal] = useState(false);
   const [showPaidModal, setShowPaidModal] = useState(false);
@@ -115,9 +114,9 @@ export const TimeTrackingApp = () => {
               className="hover:opacity-80 transition-opacity"
             >
               <img 
-                src={theme === 'dark' ? '/lovable-uploads/346daa3f-e3d2-4e56-806d-cb4e9466148e.png' : '/lovable-uploads/72a5877a-d50c-49a2-b13c-ecb0a56868e1.png'}
-                alt="Binga Beach Logo" 
-                className="h-12 md:h-16 lg:h-20 w-auto object-contain"
+                src={palawanLogo}
+                alt="Palawan Collective Logo" 
+                className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain"
               />
             </button>
             <div className="flex-1 flex justify-end">
