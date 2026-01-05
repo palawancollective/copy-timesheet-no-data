@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { DollarSign, FileText } from 'lucide-react';
-import palawanLogo from '@/assets/palawan-collective-logo.png';
 import { MainDisplay } from './MainDisplay';
 import { AdminPanel } from './AdminPanel';
 import { PasskeyModal } from './PasskeyModal';
@@ -101,27 +100,8 @@ export const TimeTrackingApp = () => {
       {/* Fixed Header */}
       <header className="sticky top-0 z-50 bg-card shadow-lg border-b-4 border-primary">
         <div className="w-full px-3 sm:px-4 py-3">
-          {/* Logo - Centered at top for all devices */}
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex-1" />
-            <button 
-              onClick={() => {
-                setIsAdminMode(false);
-                setShowInvoiceMode(false);
-                setShowScheduleMode(false);
-                window.location.href = '/';
-              }}
-              className="hover:opacity-80 transition-opacity"
-            >
-              <img 
-                src={palawanLogo}
-                alt="Palawan Collective Logo" 
-                className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain"
-              />
-            </button>
-            <div className="flex-1 flex justify-end">
-              <ThemeToggle />
-            </div>
+          <div className="flex justify-end items-center mb-3">
+            <ThemeToggle />
           </div>
 
           {/* Mobile Layout */}
