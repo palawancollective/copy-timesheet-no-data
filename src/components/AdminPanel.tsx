@@ -14,7 +14,7 @@ import { TimeEntriesTable } from './admin/TimeEntriesTable';
 import { PaymentsList } from './PaymentsList';
 import { DailyTaskAssignment } from './admin/DailyTaskAssignment';
 import { DeleteAllDataButton } from './admin/DeleteAllDataButton';
-import { BrandingSettings } from './admin/BrandingSettings';
+
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -108,9 +108,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <AdminHeader onLogout={onLogout} />
-
-      {/* Branding Settings */}
-      <BrandingSettings />
 
       {/* Add Employee */}
       <AddEmployeeForm />
