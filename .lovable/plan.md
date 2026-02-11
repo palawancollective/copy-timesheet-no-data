@@ -1,58 +1,24 @@
 
 
-## Logo Onboarding Plan
+## Fix: Logo Transparency Issue
 
-### What We're Building
-A logo system that works in both light and dark mode, is clickable to navigate home, and includes an admin setting to manage the logo.
+### Problem
+The logo images currently stored as `logo-dark.png` and `logo-light.png` appear to have a non-transparent background (visible as a square/circle behind the logo artwork). This makes them look boxed-in rather than seamlessly blending with the header.
 
-### Steps
+### Solution
+The uploaded image files themselves contain a background. You need to **re-upload truly transparent PNG versions** of the logos.
 
-1. **Add the transparent logo to the project**
-   - Copy the transparent PNG you upload into `src/assets/`
-   - Since the logo artwork is light/beige colored (designed for dark backgrounds), it will look great in dark mode but be invisible or hard to see on light backgrounds
-   - We'll apply a CSS `filter: invert()` or use a `dark:` Tailwind class to swap the logo appearance per theme, OR use two separate logo variants if you provide both
+### What I will do
 
-2. **Add logo to the header in TimeTrackingApp.tsx**
-   - Place the logo centered between an empty spacer and the ThemeToggle (same layout pattern that was previously there)
-   - Wrap in a clickable button/link that resets all modes (admin, invoice, schedule) and navigates to `/`
-   - Responsive sizing: `h-8` on mobile, scaling up to `h-14` on desktop
-   - Add `hover:opacity-80 transition-opacity` for click feedback
+1. **Replace the logo asset files** - Copy the new transparent PNGs you provide to `src/assets/logo-dark.png` and `src/assets/logo-light.png`, overwriting the current ones.
 
-3. **Dark/Light Mode Handling**
-   - **Dark mode**: Show the logo as-is (light beige on dark background works naturally)
-   - **Light mode**: Apply `dark:invert-0 invert` CSS filter to make the light-colored logo visible on white backgrounds, OR use a `brightness` filter
-   - Alternative: If you provide a dark version of the logo for light mode, we'll swap between two images using `hidden dark:block` / `block dark:hidden` classes
+2. **No code changes needed** - The header and branding settings code already renders the images correctly with `object-contain` and no background styling. Once the image files themselves are transparent, they will display seamlessly.
 
-4. **Admin Logo Management Setting**
-   - Add a new section in the AdminPanel called "App Settings" or "Branding"
-   - Include a logo upload/change feature using file storage
-   - Create a `app_settings` database table to store the logo URL
-   - The header will fetch the logo URL from the database, falling back to the default bundled logo if none is set
-   - This allows the admin to update the logo without code changes
+### What you need to do
 
-### Technical Details
+Please upload two new logo files that are **truly transparent PNGs** (no background at all -- not a white background, not a dark background, just the logo artwork on a fully transparent canvas):
+- One for **dark mode** (light-colored logo artwork)
+- One for **light mode** (dark-colored logo artwork)
 
-**Database migration:**
-- Create `app_settings` table with columns: `id`, `setting_key` (text, unique), `setting_value` (text), `created_at`, `updated_at`
-- Insert a default row for `logo_url` setting
-- RLS: public read access (anon), admin-only write (or passkey-gated in the UI)
-
-**Storage:**
-- Create a `branding` storage bucket (public) for logo uploads
-- Admin uploads go to this bucket, URL saved to `app_settings`
-
-**Components to modify:**
-- `TimeTrackingApp.tsx` - Add logo to header with click-to-home and theme-aware rendering
-- `AdminPanel.tsx` - Add "Branding" settings card with logo upload
-- New: `src/components/admin/BrandingSettings.tsx` - Logo upload component
-- New: `src/hooks/useAppSettings.ts` - Hook to fetch/update app settings
-
-**Logo rendering logic in header:**
-```
-1. Check app_settings for custom logo_url
-2. If found, use that URL
-3. If not, use the bundled default logo from src/assets/
-4. Apply theme-aware CSS filters for visibility
-5. On click -> reset all modes, navigate to "/"
-```
+**Tip**: You can use a free tool like [remove.bg](https://remove.bg) to strip the background from your current logos if needed.
 
