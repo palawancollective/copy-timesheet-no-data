@@ -8,6 +8,9 @@ import { PaidModal } from './PaidModal';
 import { InvoiceGenerator } from './InvoiceGenerator';
 import { WeeklySchedule } from './schedule/WeeklySchedule';
 import { ThemeToggle } from './ThemeToggle';
+import { useAppSettings } from '@/hooks/useAppSettings';
+import logoDark from '@/assets/logo-dark.png';
+import logoLight from '@/assets/logo-light.png';
 
 export const TimeTrackingApp = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -95,12 +98,32 @@ export const TimeTrackingApp = () => {
     });
   };
 
+  const { settings } = useAppSettings();
+  const customLogo = settings.logo_url;
+
+  const handleLogoClick = () => {
+    setIsAdminMode(false);
+    setShowInvoiceMode(false);
+    setShowScheduleMode(false);
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-app-gradient-from to-app-gradient-to">
       {/* Fixed Header */}
       <header className="sticky top-0 z-50 bg-card shadow-lg border-b-4 border-primary">
         <div className="w-full px-3 sm:px-4 py-3">
-          <div className="flex justify-end items-center mb-3">
+          <div className="flex justify-between items-center mb-3">
+            <div className="w-8" /> {/* Spacer */}
+            <button onClick={handleLogoClick} className="hover:opacity-80 transition-opacity">
+              {customLogo ? (
+                <img src={customLogo} alt="Logo" className="h-8 md:h-14 object-contain" />
+              ) : (
+                <>
+                  <img src={logoDark} alt="Logo" className="h-8 md:h-14 object-contain hidden dark:block" />
+                  <img src={logoLight} alt="Logo" className="h-8 md:h-14 object-contain block dark:hidden" />
+                </>
+              )}
+            </button>
             <ThemeToggle />
           </div>
 
