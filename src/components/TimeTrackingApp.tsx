@@ -132,9 +132,17 @@ export const TimeTrackingApp = () => {
                 <FileText className="h-3 w-3 mr-1" />
                 Invoice
               </button>
+              <a
+                href="https://baia.palawancollective.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-xs"
+              >
+                Home Page
+              </a>
               <button
                 onClick={() => setShowPasskeyModal(true)}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors text-xs col-span-2"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-2 py-2 rounded-lg font-semibold transition-colors text-xs"
               >
                 Admin
               </button>
